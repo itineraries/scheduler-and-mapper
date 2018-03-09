@@ -25,14 +25,6 @@ def parse_args(agencies=()):
         action="store_true",
         help="if present, the trip starts instead of ends at the specified time"
     )
-    arg_parser.add_argument(
-        "-s",
-        "--schedule-directory",
-        default=os.curdir,
-        help=
-            "the directory in which to look for schedule "
-            "pickles from pickle_schedules.py"
-    )
     # Allow agencies to add their own arguments.
     for agency in agencies:
         agency.add_arguments(arg_parser.add_argument)
