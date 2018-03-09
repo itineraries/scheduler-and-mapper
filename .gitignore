@@ -101,8 +101,11 @@ ENV/
 .mypy_cache/
 
 # Data files
+tabula-1.0.1-jar-with-dependencies.jar
+Route *.pdf
 Walking/
 *.pickle
 *.csv
 Node List.txt
+NYU.html
 NYU_Stops.json
