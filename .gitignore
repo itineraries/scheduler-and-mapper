@@ -101,6 +101,8 @@ ENV/
 .mypy_cache/
 
 # Data files
+Walking/
+*.pickle
 *.csv
 Node List.txt
 NYU_Stops.json
