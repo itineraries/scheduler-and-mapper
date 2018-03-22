@@ -212,7 +212,7 @@ class ShortestPathFinder:
                         current_node,
                         n.arrival_time
                     ))
-                    current_node = previous_node[current_node].name
+                    current_node = n.name
                 trip = trip[::-1]
             else:
                 current_node = origin
@@ -226,7 +226,7 @@ class ShortestPathFinder:
                         n.name,
                         n.arrival_time
                     ))
-                    current_node = previous_node[current_node].name
+                    current_node = n.name
             # Return this list. We are done. The algorithm is finished.
             return trip
         else:
