@@ -59,7 +59,7 @@ class ShortestPathFinder:
         Yields:
             A WeightedEdge object
         '''
-        for node in self.nodes - set((known_node,)):
+        for node in self.nodes - {known_node}:
             for agency in self.agencies:
                 for e in (
                     # depart = True: Only process edges from known_node.
