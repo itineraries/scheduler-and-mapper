@@ -138,7 +138,7 @@ class AgencyNYU(Agency):
                                 ending_index = first_greater_than(
                                     times,
                                     timedelta_arrive,
-                                    lambda x: x[0].time
+                                    lambda x: x[1].time
                                 )
                             else:
                                 # Find the first row in the schedule where the
@@ -159,7 +159,7 @@ class AgencyNYU(Agency):
                             for row in (
                                 itertools.islice(
                                     reversed(times),
-                                    len(times) - ending_index + 1,
+                                    len(times) - ending_index,
                                     None
                                 )
                                 if backwards else
