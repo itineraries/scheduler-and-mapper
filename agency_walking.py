@@ -41,6 +41,8 @@ class AgencyWalking(Agency):
             try:
                 seconds, directions_file = WALKING_TIMES[(from_node, to_node)]
             except KeyError:
+                # Walking directions are not available between these two nodes
+                # in this direction. Yield nothing.
                 pass
             else:
                 # Walking directions don't change based on the time.

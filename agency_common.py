@@ -50,8 +50,8 @@ class Agency(abc.ABC):
         Yields edges from from_node to to_node after datetime_depart and before
         datetime_arrive. If datetime_depart is datetime.datetime.min and
         datetime_arrive is not datetime.datetime.max, then the edges are
-        yielded in reverse chronological order. Otherwise, they are yielded in
-        chronological order.
+        yielded from the latest departure to the earliest. Otherwise, they are
+        yielded from the earliest arrival to the latest.
         
         This method must be overridden by a subclass. Calling it on an instance
         of this class will raise NotImplementedError.
