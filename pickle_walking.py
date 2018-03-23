@@ -38,24 +38,18 @@ def read_stop_locations(filename):
         }
 def all_edges(stop_locations_dict):
     '''
-    Takes a dictionary from read_stop_locations and
-    yields a (name, name, Edge) tuple from every
-    location to every other location.
+    Takes a dictionary from read_stop_locations and yields a
+    (name, name, Edge, filename) tuple from every location to every other
+    location. The filename refers to the name of the file in which the API
+    response should be cached.
     '''
     for (from_name, from_node), (to_name, to_node) in itertools.permutations(
         stop_locations_dict.items(),
         2
     ):
-        yield from_name, to_name, Edge(from_node, to_node)
-def edges_without_directions(edges_iterable):
-    '''
-    Takes the generator from all_edges, and only
-    returns the ones that are not cached.
-    '''
-    for from_name, to_name, edge in edges_iterable:
+        edge = Edge(from_node, to_node)
         filename = walking_directions_filename(edge)
-        if not os.path.exists(filename):
-            yield from_name, to_name, edge, filename
+        yield from_name, to_name, edge, filename
 def main():
     # Create WALKING_DIRECTORY if it does not exist.
     try:
@@ -63,27 +57,36 @@ def main():
     except OSError as e:
         if e.errno != errno.EEXIST:
             raise
-    # Add to the existing pickle if it exists.
-    try:
-        with open(WALKING_TIMES_PICKLE, "rb") as f:
-            walking_times = pickle.load(f)
-    except FileNotFoundError:
-        walking_times = {}
     # Figure out which walking directions are missing.
+    walking_times = {}
     try:
-        for from_name, to_name, edge, filename in edges_without_directions(
-            all_edges(read_stop_locations(STOP_LOCATIONS_CSV))
+        for from_name, to_name, edge, filename in all_edges(
+            read_stop_locations(STOP_LOCATIONS_CSV)
         ):
-            print("From", repr(from_name), "to", repr(to_name), "in", filename)
-            # Query Bing for walking directions.
-            d = bing_maps.get_route(
-                edge.to_pair_of_str(),
-                travel_mode=bing_maps.TRAVEL_MODE_WALKING,
-                decode_json=False
+            # Get walking directions.
+            try:
+                # If the walking directions are cached, read them from cache.
+                with open(filename, "rb") as f:
+                    d = f.read()
+            except FileNotFoundError:
+                # The walking directions were not cached. Get them from Bing.
+                d = bing_maps.get_route(
+                    edge.to_pair_of_str(),
+                    travel_mode=bing_maps.TRAVEL_MODE_WALKING,
+                    decode_json=False
+                )
+                # Save the whole response to a file.
+                with open(filename, "wb") as f:
+                    f.write(d)
+                print("Queried Bing for walking directions", end="")
+            else:
+                print("Using cached directions", end="")
+            print(
+                " from ", repr(from_name),
+                " to ", repr(to_name),
+                " (cache file: ", filename, ")",
+                sep=""
             )
-            # Save the whole response to a file.
-            with open(filename, "wb") as f:
-                f.write(d)
             # Extract the travel time.
             seconds = json.loads(
                 d.decode("UTF-8")
