@@ -129,6 +129,12 @@ class AgencyNYU(Agency):
                         ]
                         try:
                             if backwards:
+                                # Find the first row in the schedule where the
+                                # arrival time is greater than
+                                # timedelta_arrive. We only want to look at the
+                                # rows in the schedule above this row. The row
+                                # before this one is the last row where the
+                                # arrival time is less than timedelta_arrive.
                                 ending_index = first_greater_than(
                                     times,
                                     timedelta_arrive,
@@ -136,8 +142,10 @@ class AgencyNYU(Agency):
                                 )
                             else:
                                 # Find the first row in the schedule where the
-                                # departure time is after timedelta_depart
-                                # after midnight.
+                                # departure time is greater than
+                                # timedelta_depart. We only want to look at
+                                # this row and the rows in the schedule that
+                                # are below this row.
                                 starting_index = first_greater_than(
                                     times,
                                     timedelta_depart,
