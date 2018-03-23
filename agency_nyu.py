@@ -159,7 +159,7 @@ class AgencyNYU(Agency):
                             for row in (
                                 itertools.islice(
                                     reversed(times),
-                                    len(times) - ending_index,
+                                    len(times) - ending_index + 1,
                                     None
                                 )
                                 if backwards else
