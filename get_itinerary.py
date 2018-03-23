@@ -3,6 +3,7 @@ import argparse, datetime, dateutil.parser, os, pickle
 from shortestpathfinder import ShortestPathFinder
 from common import NODE_LIST_TXT
 from agency_common import Agency
+from agency_nyu import AgencyNYU
 from agency_walking import AgencyWalking
 TIME_STRING = "%I:%M %p"
 
@@ -39,6 +40,7 @@ def main():
     with open(NODE_LIST_TXT, "r") as f:
         nodes = [line.strip() for line in f]
     agencies = (
+        AgencyNYU,
         AgencyWalking,
     )
     assert all(issubclass(a, Agency) or isinstance(a, Agency) for a in agencies)
