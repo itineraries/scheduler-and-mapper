@@ -142,10 +142,10 @@ class ShortestPathFinder:
                 # Mark the current node as visited.
                 # A visited node will never be checked again.
                 visited.add(current_node)
-                # For the current node, consider all of its unvisited
-                # neighbors and calculate their tentative distances.
-                # Compare the newly calculated tentative distance to the
-                # current assigned value and assign the smaller one.
+                # For the current node, consider all of its unvisited neighbors
+                # and calculate their tentative distances. Compare the newly
+                # calculated tentative distance to the currently assigned value
+                # and assign the smaller one.
                 for e in self.weighted_edges(
                     current_node,
                     previous_node[current_node].arrival_time
@@ -201,8 +201,7 @@ class ShortestPathFinder:
         # route between two specific nodes) or if the smallest tentative
         # distance among the nodes in the unvisited set is infinity (when
         # planning a complete traversal; occurs when there is no connection
-        # between the initial node and remaining unvisited nodes), then
-        # stop. The algorithm has finished.
+        # between the initial node and remaining unvisited nodes), then stop.
         if previous_node[destination if depart else origin].name is None:
             self.error = \
                 "This trip is not possible either because there is no " \
