@@ -55,10 +55,15 @@ class ShortestPathFinder:
                 stops.
         '''
         self.error = "No error."
-        self.nodes = set(nodes)
+        self.nodes = frozenset(nodes)
         self.agencies = agencies
     def weighted_edges(
-        self, known_node, datetime_trip, depart, consecutive_agency
+        self,
+        known_node,
+        datetime_trip,
+        depart,
+        consecutive_agency,
+        extra_nodes=frozenset()
     ):
         '''
         Returns a generator for directed, weighted edges from known_node.
@@ -76,10 +81,13 @@ class ShortestPathFinder:
             consecutive_agency:
                 the agency that provided the edge leading to from_node if
                 depart is True or to_node otherwise
+            extra_nodes:
+                a set or frozenset of nodes to consider in addition to the
+                nodes that are already in self.nodes
         Yields:
             A WeightedEdge object
         '''
-        for node in self.nodes - {known_node}:
+        for node in (self.nodes | extra_nodes) - {known_node}:
             for agency in self.agencies:
                 for e in (
                     # depart = True: Only process edges from known_node.
@@ -116,6 +124,7 @@ class ShortestPathFinder:
             tuples.
         '''
         visit_queue = []
+        extra_nodes = {origin, destination}
         # Pass the origin and destination to the agencies.
         for agency in self.agencies:
             agency.use_origin_destination(origin, destination)
@@ -155,7 +164,8 @@ class ShortestPathFinder:
                     if depart else
                     previous_node[current_node].departure_time,
                     depart,
-                    previous_node[current_node].agency
+                    previous_node[current_node].agency,
+                    extra_nodes
                 ):
                     num_stops_to_node_new = previous_node[
                         current_node
