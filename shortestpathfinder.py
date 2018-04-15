@@ -116,6 +116,9 @@ class ShortestPathFinder:
             tuples.
         '''
         visit_queue = []
+        # Pass the origin and destination to the agencies.
+        for agency in self.agencies:
+            agency.use_origin_destination(origin, destination)
         # Assign to every node a tentative distance value.
         # Set it to zero for our initial node and to infinity for the rest.
         previous_node = collections.defaultdict(self.PreviousNode)

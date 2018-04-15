@@ -37,6 +37,13 @@ class Agency(abc.ABC):
                 to add_arguments
         '''
     @classmethod
+    def use_origin_destination(cls, origin, destination):
+        '''
+        This function will use the origin and destination to optimize calls to
+        get_edge. It must be called before the first call to get_edge after the
+        origin or destination changes.
+        '''
+    @classmethod
     @abc.abstractmethod
     def get_edge(
         cls,
