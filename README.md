@@ -12,7 +12,9 @@ This code is responsible for parsing schedule data and finding itineraries.
 ## Acquire schedules
 1. Download the PDFs from NYU and update `NYU Bus Schedules.csv`.
 2. Run `pickle_nyu.py`.
-3. Download the stops feed from the TransLoc API. Save it as `NYU_Stops.json`.
+3. Download the
+   [stops feed](https://market.mashape.com/transloc/openapi-1-2#stops)
+   from the TransLoc API. Save it as `NYU_Stops.json`.
 4. Run `match_stops_locations.py`. If it says to check a stop in the overrides
    file, then update `Stop Location Overrides.csv`.
 5. Run `pickle_walking.py`.
