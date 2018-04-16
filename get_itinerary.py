@@ -37,7 +37,7 @@ def parse_args(agencies=()):
     # Return the parsed arguments.
     return args_parsed
 def main():
-    with open(NODE_LIST_TXT, "r") as f:
+    with open(NODE_LIST_TXT, "r", encoding="UTF-8") as f:
         nodes = [line.strip() for line in f]
     agencies = (
         AgencyNYU,

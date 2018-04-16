@@ -8,7 +8,7 @@ STOP_LOCATION_OVERRIDES = file_in_this_dir("Stop Location Overrides.csv")
 STOPS_JSON = file_in_this_dir("NYU_Stops.json")
 
 def main():
-    with open(STOP_LOCATION_OVERRIDES, "a+") as fslo:
+    with open(STOP_LOCATION_OVERRIDES, "a+", encoding="UTF-8") as fslo:
     # Build a dictionary of stops whose locations were manually specified.
         print("Reading stop location overrides...")
         fslo.seek(0)
@@ -33,11 +33,11 @@ def main():
         ))
         # Build a list of stops whose locations were not manually specified.
         print("Reading node list from PDFs...")
-        with open(NODE_LIST_TXT, "r") as f:
+        with open(NODE_LIST_TXT, "r", encoding="UTF-8") as f:
             nodes = [l.strip() for l in f]
         # Read all locations from the JSON file.
         print("Reading stops JSON from API...")
-        with open(STOPS_JSON, "r") as f:
+        with open(STOPS_JSON, "r", encoding="UTF-8") as f:
             api_stops = {}
             for d in json.load(f)["data"]:
                 if d["location_type"] == "stop":
@@ -52,7 +52,7 @@ def main():
         matches = matcher.match_list_of_str(nodes, api_stops.keys())
         # Create a CSV file, which can be reviewed by the user.
         print("Writing stop locations...")
-        with open(STOP_LOCATIONS_CSV, "w", newline="") as f:
+        with open(STOP_LOCATIONS_CSV, "w", newline="", encoding="UTF-8") as f:
             writer = csv.writer(f)
             writer.writerow(
                 ("From PDFs", "From API", "Score", "Latitude", "Longitude")

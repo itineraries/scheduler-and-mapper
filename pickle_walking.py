@@ -27,7 +27,7 @@ def read_stop_locations(filename):
     and returns a dictionary from each stop name to its
     location, represented by a Point.
     '''
-    with open(filename, "r", newline="") as f:
+    with open(filename, "r", newline="", encoding="UTF-8") as f:
         return {
             row["From PDFs"]: Point(
                 lat=row["Latitude"],
