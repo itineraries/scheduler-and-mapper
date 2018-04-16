@@ -6,7 +6,7 @@
 # - No words like "Arrival," "Arrive," "Depart," or "Departure" in titles
 # - Randomly select some schedules, compare output to original PDF
 import cgi, collections, csv, datetime, dateutil.parser, io, itertools, \
-    multiprocessing.pool, pickle, re, subprocess, sys
+    multiprocessing.pool, os, pickle, re, subprocess, sys
 from common import NODE_LIST_TXT, file_in_this_dir
 from common_nyu import DAYS_OF_WEEK, NYU_PICKLE, NYUSchedule, NYUTime
 import pickle_nyu_unwritten_times
@@ -220,7 +220,7 @@ def read_pdf_table(filename, pages, area, column_boundaries):
             else:
                 argv.append("--columns")
                 argv.append(column_boundaries)
-        argv.append(filename)
+        argv.append(os.path.join(os.curdir, "NYU", filename))
         output = subprocess.check_output(argv)
     except FileNotFoundError:
         print("It looks like you do not have Java installed.")

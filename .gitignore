@@ -102,7 +102,7 @@ ENV/
 
 # Data files
 tabula-1.0.1-jar-with-dependencies.jar
-Route *.pdf
+NYU/
 Walking/
 *.pickle
 *.csv
