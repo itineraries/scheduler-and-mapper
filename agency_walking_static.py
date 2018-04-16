@@ -8,7 +8,7 @@ ONE_MINUTE = datetime.timedelta(minutes=1)
 with open(WALKING_TIMES_PICKLE, "rb") as f:
     WALKING_TIMES = pickle.load(f)
 
-class AgencyWalking(Agency):
+class AgencyWalkingStatic(Agency):
     max_seconds = (
         datetime.datetime.max - datetime.datetime.min
     ).total_seconds()

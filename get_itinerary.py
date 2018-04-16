@@ -4,7 +4,7 @@ from shortestpathfinder import ShortestPathFinder
 from common import NODE_LIST_TXT
 from agency_common import Agency
 from agency_nyu import AgencyNYU
-from agency_walking import AgencyWalking
+from agency_walking_static import AgencyWalkingStatic
 TIME_STRING = "%I:%M %p"
 
 def parse_args(agencies=()):
@@ -41,7 +41,7 @@ def main():
         nodes = [line.strip() for line in f]
     agencies = (
         AgencyNYU,
-        AgencyWalking,
+        AgencyWalkingStatic,
     )
     assert all(issubclass(a, Agency) or isinstance(a, Agency) for a in agencies)
     args_parsed = parse_args(agencies)

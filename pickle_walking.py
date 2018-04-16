@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 '''
-Use this script to prepare the pickle that agency_walking needs.
+Use this script to prepare the pickle that agency_walking_static needs.
 
 Before running this script, make sure that all stops are in the node list
 and run match_stops_locations.
