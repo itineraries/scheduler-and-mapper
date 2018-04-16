@@ -4,11 +4,11 @@ from common import NODE_LIST_TXT, file_in_this_dir
 from common_walking import Point, STOP_LOCATIONS_CSV
 sys.path.insert(0, file_in_this_dir("../string-match"))
 import matcher
-STOP_LOCATION_OVERRIDES = file_in_this_dir("Stop Location Overrides.csv")
+STOP_LOCATION_OVERRIDES_CSV = file_in_this_dir("Stop Location Overrides.csv")
 STOPS_JSON = file_in_this_dir("NYU_Stops.json")
 
 def main():
-    with open(STOP_LOCATION_OVERRIDES, "a+", encoding="UTF-8") as fslo:
+    with open(STOP_LOCATION_OVERRIDES_CSV, "a+", encoding="UTF-8") as fslo:
     # Build a dictionary of stops whose locations were manually specified.
         print("Reading stop location overrides...")
         fslo.seek(0)
