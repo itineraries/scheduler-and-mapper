@@ -9,8 +9,21 @@ This code is responsible for parsing schedule data and finding itineraries.
 4. Download `tabula-1.0.1-jar-with-dependencies.jar` from
    [tabula-java](https://github.com/tabulapdf/tabula-java/releases).
 
-## Acquire schedules
-1. Download the PDFs from NYU and update `NYU Bus Schedules.csv`.
+## Build schedules
+1. Download the following files from NYU and save them in `./NYU/`:
+   ```
+   http://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20A%20Mon-Thurs.pdf
+   http://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20A%20Fri.pdf
+   http://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20B%20Mon-Thurs.pdf
+   http://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20B%20Fri.pdf
+   http://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20C%20Mon-Thurs.pdf
+   http://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20E%20Mon-Thurs.pdf
+   http://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20E%20Fri.pdf
+   http://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20F%20Mon-Thurs.pdf
+   http://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20G%20Mon-Thurs.pdf
+   http://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20G%20Fri.pdf
+   http://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20W%20Sat-Sun.pdf
+   ```
 2. Run `pickle_nyu.py`.
 3. Download the
    [stops feed](https://market.mashape.com/transloc/openapi-1-2#stops)
