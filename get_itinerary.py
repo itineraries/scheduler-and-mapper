@@ -22,7 +22,9 @@ def parse_args(agencies=()):
     )
     arg_parser.add_argument(
         "destination",
-        help="the place that you want to go to"
+        help="the place that you want to go to",
+        nargs="?",
+        default=""
     )
     arg_parser.add_argument(
         "datetime",
@@ -38,11 +40,33 @@ def parse_args(agencies=()):
         action="store_true",
         help="modifies the behavior of datetime (see above)"
     )
+    arg_parser.add_argument(
+        "-l",
+        "--list-departures",
+        type=int,
+        nargs="?",
+        const=2,
+        default=0,
+        metavar="N",
+        help=
+            "if set, instead of directions to the destination, the next N "
+            "departures from the origin after datetime are returned"
+    )
     # Allow agencies to add their own arguments.
     for agency in agencies:
         agency.add_arguments(arg_parser.add_argument)
     # Parse the arguments.
     args_parsed = arg_parser.parse_args()
+    # Check that the destination or --list-departures was specified and that
+    # only one, not both, was specified.
+    if args_parsed.destination and args_parsed.list_departures:
+        arg_parser.error(
+            "the destination and --list-departures are mutually exclusive"
+        )
+    elif not args_parsed.destination and not args_parsed.list_departures:
+        arg_parser.error(
+            "either the destination or --list-departures is required"
+        )
     # Pass the parsed arguments to the agencies.
     for agency in agencies:
         agency.handle_parsed_arguments(args_parsed)
