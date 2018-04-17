@@ -11,9 +11,9 @@ def parse_args(agencies=()):
     arg_parser = argparse.ArgumentParser(
         description=
             "Given an origin, a destination, an arrival or departure time, "
-            "and optional restrictions (see below), returns instructions on "
-            "how to get from the origin to the destination by walking and/or "
-            "by taking the NYU buses."
+            "and optional restrictions (see below), returns directions on how "
+            "to get from the origin to the destination by walking and/or by "
+            "taking the NYU buses."
     )
     # Add arguments for this script.
     arg_parser.add_argument(
