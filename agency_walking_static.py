@@ -18,7 +18,10 @@ class AgencyWalkingStatic(Agency):
             "--walking-max",
             type=float,
             default=cls.max_seconds / 60.0,
-            help="in minutes, the longest you are willing to walk at a time"
+            metavar="minutes",
+            help=
+                "the longest period of time that you are willing to walk at a "
+                "time from one bus stop to another"
         )
     @classmethod
     def handle_parsed_arguments(cls, args_parsed):
