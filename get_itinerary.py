@@ -9,22 +9,34 @@ TIME_STRING = "%I:%M %p"
 
 def parse_args(agencies=()):
     arg_parser = argparse.ArgumentParser(
-        description="Finds a trip in a schedule"
+        description=
+            "Given an origin, a destination, an arrival or departure time, "
+            "and optional restrictions (see below), returns instructions on "
+            "how to get from the origin to the destination by walking and/or "
+            "by taking the NYU buses."
     )
     # Add arguments for this script.
-    arg_parser.add_argument("origin", help="the origin of the trip")
-    arg_parser.add_argument("destination", help="the destination of the trip")
+    arg_parser.add_argument(
+        "origin",
+        help="the place that you are coming from"
+    )
+    arg_parser.add_argument(
+        "destination",
+        help="the place that you want to go to"
+    )
     arg_parser.add_argument(
         "datetime",
         help=
-            "the date and time that the trip starts if --depart "
-            "is set or ends if --depart is not set"
+            "if --depart is set, the earliest time that you can depart from "
+            "the origin; "
+            "if --depart is not set, the latest time that you can arrive at "
+            "the destination"
     )
     arg_parser.add_argument(
         "-d",
         "--depart",
         action="store_true",
-        help="if present, the trip starts instead of ends at the specified time"
+        help="modifies the behavior of datetime (see above)"
     )
     # Allow agencies to add their own arguments.
     for agency in agencies:
