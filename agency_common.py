@@ -79,3 +79,16 @@ class Agency(abc.ABC):
             An UnweightedEdge object
         '''
         raise NotImplementedError
+    @classmethod
+    def get_pickup(cls, from_node, datetime_depart):
+        '''
+        Finds trips that depart from from_node after datetime_depart. Yields an
+        edge from from_node to the trip's final destination for each trip.
+        
+        Like in get_edge, from_node is a string that may equal the name of a
+        bus stop or that may be what the user entered as the origin.
+        
+        If this method is not overridden, then it is simply an empty generator.
+        '''
+        return
+        yield
