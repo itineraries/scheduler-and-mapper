@@ -60,6 +60,13 @@ class Agency(abc.ABC):
         yielded from the latest departure to the earliest. Otherwise, they are
         yielded from the earliest arrival to the latest.
         
+        Both from_node and to_node are strings. They may be the names of bus
+        stops from "Node List.txt" or from "Stop Locations.csv," or they may be
+        whatever the user entered as the origin or destination. One might be a
+        bus stop while the other is the origin or destination. If the agency
+        cannot handle the given from_node and to_node, then get_edge should
+        simply yield nothing. Another agency should handle them.
+        
         This method must be overridden by a subclass. Calling it on an instance
         of this class will raise NotImplementedError.
         

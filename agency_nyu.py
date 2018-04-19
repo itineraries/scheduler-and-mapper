@@ -116,10 +116,10 @@ class AgencyNYU(Agency):
                     (date_arrive if backwards else date_depart).weekday()
                 ]:
                     for from_node_index, to_node_index \
-                        in schedule.get_column_indices(from_node, to_node):
+                        in schedule.get_columns_indices(from_node, to_node):
                         # Filter out the rows with None for either stop.
                         # Recall that from_node_index < to_node_index is
-                        # guaranteed by schedule.get_column_indices.
+                        # guaranteed by schedule.get_columns_indices.
                         times = [
                             (row[from_node_index], row[to_node_index])
                             for row in schedule.other_rows
