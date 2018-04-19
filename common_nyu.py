@@ -17,7 +17,7 @@ class NYUSchedule:
     route = attr.ib(validator=attr.validators.instance_of(str))
     header_row = attr.ib(validator=attr.validators.instance_of(list))
     other_rows = attr.ib(validator=attr.validators.instance_of(list))
-    def get_column_indices(self, from_node, to_node):
+    def get_columns_indices(self, from_node, to_node):
         '''
         Yields pairs of indices. In each pair, the first index corresponds to a
         value in self.header_row that is equal to from_node. In each pair, the
@@ -49,6 +49,14 @@ class NYUSchedule:
             # Pair from_node_index with each of the remaining values.
             for to_node_index in to_node_indices:
                 yield from_node_index, to_node_index
+    def get_column_indices(self, from_node):
+        '''
+        Yields the indices that correspond to values in self.header_row that
+        are equal to from_node.
+        '''
+        for i, v in enumerate(self.header_row):
+            if v == from_node:
+                yield i
 @attr.s
 class NYUTime:
     def __str__(self):
