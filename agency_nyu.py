@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import collections, datetime, heapq, itertools, pickle
-from agency_common import Agency
+from agency_common import Agency, Direction
 from common_nyu import NYU_PICKLE
 JUST_BEFORE_MIDNIGHT = datetime.timedelta(microseconds=-1)
 MIDNIGHT = datetime.time()
@@ -237,5 +237,120 @@ class AgencyNYU(Agency):
                     yield e
                 else:
                     break
+            else:
+                break
+    @classmethod
+    def get_pickup(cls, from_node, datetime_depart):
+        date_depart, timedelta_depart = timedelta_after_midnight(
+            datetime_depart
+        )
+        # To account for schedules that run past midnight and from the previous
+        # day, we start our search in the previous day but with one day added
+        # to the timedelta.
+        try:
+            date_depart -= ONE_DAY
+        except OverflowError:
+            pass
+        else:
+            timedelta_depart += ONE_DAY
+        last_departure = datetime.datetime.min
+        # Use a priority queue as a buffer for edges. This allows us to make
+        # sure that we have scanned all the schedules at least one day ahead
+        # before we determine which is the soonest trip and yield it.
+        edges_heap = []
+        date_overflowed = False
+        days_without_edges = 0
+        # Yield edges until we hit the maximum date.
+        while True:
+            # If the departure times of the edges in the buffer do not span at
+            # least a day, compute more edges. If no departures are seen in
+            # seven days, just stop; there will not be any more because the
+            # schedules repeat every week.
+            if days_without_edges < 7 and (
+                not edges_heap or
+                (last_departure - edges_heap[0].edge.datetime_depart) < ONE_DAY
+            ) and not date_overflowed:
+                days_without_edges += 1
+                for schedule in schedule_by_day[date_depart.weekday()]:
+                    for from_node_index \
+                        in schedule.get_column_indices(from_node):
+                        # Filter out the rows where the vehicle will not stop
+                        # and pick up passengers at from_node.
+                        # Recall that row[-1] is guaranteed not to be None by
+                        # parse_schedule_row in pickle_nyu.py.
+                        # len(row) - 1 will be used later to get the name of
+                        # the final stop in the trip.
+                        times = [
+                            (row[from_node_index], row[-1], len(row) - 1)
+                            for row in schedule.other_rows
+                            if from_node_index < len(row) - 1
+                            and row[from_node_index] is not None
+                            and row[from_node_index].pickup
+                        ]
+                        # Find the first row in the schedule where the
+                        # departure time is greater than timedelta_depart. We
+                        # only want to look at this row and the rows in the
+                        # schedule that are below this row.
+                        try:
+                            starting_index = first_greater_than(
+                                times,
+                                timedelta_depart,
+                                lambda x: x[0].time
+                            )
+                        except ValueError:
+                            pass
+                        else:
+                            for row in itertools.islice(
+                                times,
+                                starting_index,
+                                None
+                            ):
+                                # Add the edge.
+                                d = datetime.datetime.combine(
+                                    date_depart,
+                                    MIDNIGHT
+                                ) + row[0].time
+                                a = datetime.datetime.combine(
+                                    date_depart,
+                                    MIDNIGHT
+                                ) + row[1].time
+                                heapq.heappush(
+                                    edges_heap,
+                                    EdgeHeapQKey(
+                                        a - datetime.datetime.min,
+                                        Direction(
+                                            datetime_depart=d,
+                                            datetime_arrive=a,
+                                            human_readable_instruction=(
+                                                "Take Route " +
+                                                schedule.route + "." +
+                                                (
+                                                    " Signal driver to stop."
+                                                    if row[1].soft
+                                                    else ""
+                                                )
+                                            ),
+                                            from_node=from_node,
+                                            to_node=schedule.header_row[row[2]]
+                                        )
+                                    )
+                                )
+                                if d > last_departure:
+                                    last_departure = d
+                                days_without_edges = 0
+                # Increment the day and continue.
+                try:
+                    date_depart += ONE_DAY
+                except OverflowError:
+                    date_overflowed = True
+                else:
+                    if timedelta_depart < ONE_DAY:
+                        timedelta_depart = JUST_BEFORE_MIDNIGHT
+                    else:
+                        timedelta_depart -= ONE_DAY
+                # Check again whether more edges need to be computed.
+                continue
+            if edges_heap:
+                yield heapq.heappop(edges_heap).edge
             else:
                 break
