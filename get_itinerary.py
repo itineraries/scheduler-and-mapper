@@ -49,8 +49,9 @@ def parse_args(agencies=()):
         default=0,
         metavar="N",
         help=
-            "if set, instead of directions to the destination, the next N "
-            "departures from the origin after datetime are returned"
+            "(implies --depart) if set, instead of directions to the "
+            "destination, the next N departures from the origin after datetime "
+            "are returned"
     )
     # Allow agencies to add their own arguments.
     for agency in agencies:
