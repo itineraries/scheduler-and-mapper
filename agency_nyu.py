@@ -281,7 +281,7 @@ class AgencyNYU(Agency):
                         times = [
                             (row[from_node_index], row[-1])
                             for row in schedule.other_rows
-                            if from_node_index < len(row)
+                            if from_node_index < len(row) - 1
                             and row[from_node_index] is not None
                             and row[from_node_index].pickup
                         ]
