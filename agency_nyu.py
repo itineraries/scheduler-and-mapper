@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import collections, datetime, heapq, itertools, pickle
-from agency_common import Agency
+from agency_common import Agency, Direction
 from common_nyu import NYU_PICKLE
 JUST_BEFORE_MIDNIGHT = datetime.timedelta(microseconds=-1)
 MIDNIGHT = datetime.time()
@@ -275,11 +275,13 @@ class AgencyNYU(Agency):
                     for from_node_index \
                         in schedule.get_column_indices(from_node):
                         # Filter out the rows where the vehicle will not stop
-                        # and pick up passengers at from_node. Recall that
-                        # row[-1] is guaranteed not to be None by
+                        # and pick up passengers at from_node.
+                        # Recall that row[-1] is guaranteed not to be None by
                         # parse_schedule_row in pickle_nyu.py.
+                        # len(row) - 1 will be used later to get the name of
+                        # the final stop in the trip.
                         times = [
-                            (row[from_node_index], row[-1])
+                            (row[from_node_index], row[-1], len(row) - 1)
                             for row in schedule.other_rows
                             if from_node_index < len(row) - 1
                             and row[from_node_index] is not None
@@ -316,16 +318,20 @@ class AgencyNYU(Agency):
                                     edges_heap,
                                     EdgeHeapQKey(
                                         a - datetime.datetime.min,
-                                        cls.UnweightedEdge(
-                                            d,
-                                            a,
-                                            "Take Route " +
-                                            schedule.route + "." +
-                                            (
-                                                " Signal driver to stop."
-                                                if row[1].soft
-                                                else ""
-                                            )
+                                        Direction(
+                                            datetime_depart=d,
+                                            datetime_arrive=a,
+                                            human_readable_instruction=(
+                                                "Take Route " +
+                                                schedule.route + "." +
+                                                (
+                                                    " Signal driver to stop."
+                                                    if row[1].soft
+                                                    else ""
+                                                )
+                                            ),
+                                            from_node=from_node,
+                                            to_node=schedule.header_row[row[2]]
                                         )
                                     )
                                 )
