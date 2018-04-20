@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import argparse, datetime, dateutil.parser, os, pickle
+import argparse, datetime, dateutil.parser, os, pickle, warnings
 from shortestpathfinder import ShortestPathFinder
 from common import NODE_LIST_TXT
 from agency_common import Agency
@@ -50,11 +50,19 @@ def parse_args(agencies=()):
         args_parsed.datetime = datetime.datetime.now()
     else:
         try:
-            args_parsed.datetime = dateutil.parser.parse(args_parsed.datetime)
+            with warnings.catch_warnings():
+                warnings.simplefilter("error")
+                args_parsed.datetime = \
+                    dateutil.parser.parse(args_parsed.datetime)
+            if args_parsed.datetime.tzinfo is not None:
+                raise dateutil.parser._parser.UnknownTimezoneWarning
         except ValueError:
             arg_parser.error(
                 "invalid datetime value: " + repr(args_parsed.datetime)
             )
+        except dateutil.parser._parser.UnknownTimezoneWarning:
+            # Time zones are not currently supported by this software.
+            arg_parser.error("time zones are not supported")
     # Pass the parsed arguments to the agencies.
     for agency in agencies:
         agency.handle_parsed_arguments(args_parsed)
