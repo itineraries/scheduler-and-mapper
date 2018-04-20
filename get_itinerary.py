@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import argparse, datetime, dateutil.parser, os, pickle
+import argparse, datetime, dateutil.parser, os, pickle, warnings
 from shortestpathfinder import ShortestPathFinder
 from common import NODE_LIST_TXT
 from agency_common import Agency
@@ -57,6 +57,8 @@ def parse_args(agencies=()):
         agency.add_arguments(arg_parser.add_argument)
     # Parse the arguments.
     args_parsed = arg_parser.parse_args()
+    args_parsed.origin = args_parsed.origin.strip()
+    args_parsed.destination = args_parsed.destination.strip()
     # Check that the destination or --list-departures was specified and that
     # only one, not both, was specified.
     if args_parsed.destination and args_parsed.list_departures:
@@ -67,6 +69,24 @@ def parse_args(agencies=()):
         arg_parser.error(
             "either the destination or --list-departures is required"
         )
+    # Convert the datetime argument to a datetime.
+    if args_parsed.datetime.lower() == "now":
+        args_parsed.datetime = datetime.datetime.now()
+    else:
+        try:
+            with warnings.catch_warnings():
+                warnings.simplefilter("error")
+                args_parsed.datetime = \
+                    dateutil.parser.parse(args_parsed.datetime)
+            if args_parsed.datetime.tzinfo is not None:
+                raise dateutil.parser._parser.UnknownTimezoneWarning
+        except ValueError:
+            arg_parser.error(
+                "invalid datetime value: " + repr(args_parsed.datetime)
+            )
+        except dateutil.parser._parser.UnknownTimezoneWarning:
+            # Time zones are not currently supported by this software.
+            arg_parser.error("time zones are not supported")
     # Pass the parsed arguments to the agencies.
     for agency in agencies:
         agency.handle_parsed_arguments(args_parsed)
@@ -81,21 +101,8 @@ def main():
     )
     assert all(issubclass(a, Agency) or isinstance(a, Agency) for a in agencies)
     args_parsed = parse_args(agencies)
-    # Convert the datetime argument to a datetime.
-    try:
-        if args_parsed.datetime.lower() == "now":
-            args_parsed.datetime = datetime.datetime.now()
-        else:
-            args_parsed.datetime = dateutil.parser.parse(
-                args_parsed.datetime,
-                ignoretz=True
-            )
-    except ValueError:
-        arg_parser.print_usage()
-        print("{}: error: argument datetime: invalid datetime value: {}".format(
-            __file__,
-            repr(args_parsed.datetime))
-        )
+    if False:
+        pass
     else:
         args_parsed.origin = args_parsed.origin.strip()
         args_parsed.destination = args_parsed.destination.strip()
