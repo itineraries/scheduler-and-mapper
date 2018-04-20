@@ -5,7 +5,6 @@ from common import NODE_LIST_TXT
 from agency_common import Agency
 from agency_nyu import AgencyNYU
 from agency_walking_static import AgencyWalkingStatic
-TIME_STRING = "%I:%M %p"
 
 def parse_args(agencies=()):
     arg_parser = argparse.ArgumentParser(
@@ -90,31 +89,13 @@ def main():
             )
             if trip:
                 print("Itinerary:")
-                for \
-                    stop_depart, time_depart, instruction, \
-                    stop_arrive, time_arrive\
-                in trip:
-                    print(end=" - ")
-                    if time_depart is not None:
-                        print(
-                            "Depart from", stop_depart, "at",
-                            time_depart.strftime(TIME_STRING),
-                            end=". "
-                        )
-                    if instruction is not None:
-                        print(instruction, end=" ")
-                    if time_arrive is not None:
-                        print(
-                            "Arrive at", stop_arrive, "at",
-                            time_arrive.strftime(TIME_STRING),
-                            end="."
-                        )
-                    print()
+                for direction in trip:
+                    print(" -", direction)
                 print(
                     "Total time:",
-                    trip[-1][4] - trip[0][4]
+                    trip[-1].datetime_arrive - trip[0].datetime_arrive
                     if args_parsed.depart else
-                    trip[-1][1] - trip[0][1]
+                    trip[-1].datetime_depart - trip[0].datetime_depart
                 )
             else:
                 print(pathfinder.error)

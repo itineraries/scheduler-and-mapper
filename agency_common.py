@@ -86,3 +86,26 @@ class Agency(abc.ABC):
             An UnweightedEdge object
         '''
         raise NotImplementedError
+@attr.s
+class Direction(Agency.UnweightedEdge):
+    '''
+    This class represents one instruction to the user within an itinerary.
+    '''
+    TIME_STRING = "%I:%M %p."
+    from_node = attr.ib()
+    to_node = attr.ib()
+    def __str__(self):
+        result = []
+        if self.datetime_depart is not None:
+            result.append("Depart from")
+            result.append(str(self.from_node))
+            result.append("at")
+            result.append(self.datetime_depart.strftime(self.TIME_STRING))
+        if self.human_readable_instruction is not None:
+            result.append(str(self.human_readable_instruction))
+        if self.datetime_arrive is not None:
+            result.append("Arrive at")
+            result.append(str(self.to_node))
+            result.append("at")
+            result.append(self.datetime_arrive.strftime(self.TIME_STRING))
+        return " ".join(result)
