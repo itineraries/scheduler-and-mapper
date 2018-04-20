@@ -3,6 +3,9 @@ import attr, collections, datetime, heapq, pickle
 from agency_common import Agency
 
 class ShortestPathFinder:
+    '''
+    This class implements a uniform cost search.
+    '''
     @attr.s
     class PreviousNode:
         agency = attr.ib(
@@ -44,16 +47,6 @@ class ShortestPathFinder:
         # The node to which this edge connects
         neighbor_node = attr.ib()
     def __init__(self, nodes, agencies):
-        '''
-        This class essentially implements Dijkstra's algorithm.
-        
-        Arguments:
-            edges_for_route:
-                For every route, map (origin, destination) to (column of
-                departure time, column of arrival time). We are assuming that
-                the arrival time is the same as the departure time for all
-                stops.
-        '''
         self.error = "No error."
         self.nodes = frozenset(nodes)
         self.agencies = agencies
