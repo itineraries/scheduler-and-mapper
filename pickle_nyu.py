@@ -202,6 +202,7 @@ def parse_schedule_row(header_row, row, show_parse_error=True):
         if result_cell is not None:
             last_header = h
             last_delta = result_cell
+    # Strip None values from the end of the list.
     while result_row and result_row[-1] is None:
         result_row.pop()
     return result_row

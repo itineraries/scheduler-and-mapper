@@ -57,12 +57,6 @@ class NYUSchedule:
         for i, v in enumerate(self.header_row):
             if v == from_node:
                 yield i
-    def get_last_column_index(self):
-        '''
-        Returns the index of the last column in the schedule. This is useful if
-        you want to reference the last stop in a trip.
-        '''
-        return len(self.header_row) - 1
 @attr.s
 class NYUTime:
     def __str__(self):

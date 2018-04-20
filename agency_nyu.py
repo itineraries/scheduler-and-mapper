@@ -274,30 +274,17 @@ class AgencyNYU(Agency):
                 for schedule in schedule_by_day[date_depart.weekday()]:
                     for from_node_index \
                         in schedule.get_column_indices(from_node):
-                        last_column_index = schedule.get_last_column_index()
                         # Filter out the rows where the vehicle will not stop
-                        # and pick up passengers at from_node.
-                        times = []
-                        for row in schedule.other_rows:
-                            if from_node_index < len(row) and \
-                                row[from_node_index] is not None and \
-                                row[from_node_index].pickup:
-                                # Find the last stop in this trip by looking
-                                # from the last column to the left.
-                                for to_node_index in range(
-                                    last_column_index,
-                                    from_node_index,
-                                    -1
-                                ):
-                                    if to_node_index < len(row) and \
-                                        row[to_node_index] is not None:
-                                        times.append(
-                                            (
-                                                row[from_node_index],
-                                                row[to_node_index]
-                                            )
-                                        )
-                                        break
+                        # and pick up passengers at from_node. Recall that
+                        # row[-1] is guaranteed not to be None by
+                        # parse_schedule_row in pickle_nyu.py.
+                        times = [
+                            (row[from_node_index], row[-1])
+                            for row in schedule.other_rows
+                            if from_node_index < len(row)
+                            and row[from_node_index] is not None
+                            and row[from_node_index].pickup
+                        ]
                         # Find the first row in the schedule where the
                         # departure time is greater than timedelta_depart. We
                         # only want to look at this row and the rows in the
