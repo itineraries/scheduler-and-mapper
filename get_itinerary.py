@@ -80,8 +80,6 @@ def main():
     if False:
         pass
     else:
-        args_parsed.origin = args_parsed.origin.strip()
-        args_parsed.destination = args_parsed.destination.strip()
         if args_parsed.origin != args_parsed.destination:
             pathfinder = ShortestPathFinder(nodes, agencies)
             trip = pathfinder.find_trip(
