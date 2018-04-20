@@ -5,6 +5,7 @@ from common import NODE_LIST_TXT
 from agency_common import Agency
 from agency_nyu import AgencyNYU
 from agency_walking_static import AgencyWalkingStatic
+from departure_lister import departure_list
 
 def parse_args(agencies=()):
     arg_parser = argparse.ArgumentParser(
@@ -101,9 +102,18 @@ def main():
     )
     assert all(issubclass(a, Agency) or isinstance(a, Agency) for a in agencies)
     args_parsed = parse_args(agencies)
-    if False:
-        pass
+    if args_parsed.list_departures:
+        # The user asked for a list of departures from the origin.
+        print("Departures:")
+        for direction in departure_list(
+            agencies,
+            args_parsed.origin,
+            args_parsed.datetime,
+            args_parsed.list_departures
+        ):
+            print(" -", direction)
     else:
+        # The user specified a destination.
         if args_parsed.origin != args_parsed.destination:
             pathfinder = ShortestPathFinder(nodes, agencies)
             trip = pathfinder.find_trip(
