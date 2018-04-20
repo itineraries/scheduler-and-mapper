@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 import attr, collections, datetime, heapq, pickle
-from agency_common import Agency
+from agency_common import Agency, Direction
 
 class ShortestPathFinder:
+    '''
+    This class implements a uniform cost search.
+    '''
     @attr.s
     class PreviousNode:
         agency = attr.ib(
@@ -44,16 +47,6 @@ class ShortestPathFinder:
         # The node to which this edge connects
         neighbor_node = attr.ib()
     def __init__(self, nodes, agencies):
-        '''
-        This class essentially implements Dijkstra's algorithm.
-        
-        Arguments:
-            edges_for_route:
-                For every route, map (origin, destination) to (column of
-                departure time, column of arrival time). We are assuming that
-                the arrival time is the same as the departure time for all
-                stops.
-        '''
         self.error = "No error."
         self.nodes = frozenset(nodes)
         self.agencies = agencies
@@ -230,12 +223,12 @@ class ShortestPathFinder:
             previous_node[origin].departure_time = None
             while current_node is not None:
                 n = previous_node[current_node]
-                trip.append((
-                    n.name,
-                    n.departure_time,
-                    n.human_readable_instruction,
-                    current_node,
-                    n.arrival_time
+                trip.append(Direction(
+                    from_node=n.name,
+                    datetime_depart=n.departure_time,
+                    human_readable_instruction=n.human_readable_instruction,
+                    to_node=current_node,
+                    datetime_arrive=n.arrival_time
                 ))
                 current_node = n.name
             trip = trip[::-1]
@@ -244,12 +237,12 @@ class ShortestPathFinder:
             previous_node[destination].arrival_time = None
             while current_node is not None:
                 n = previous_node[current_node]
-                trip.append((
-                    current_node,
-                    n.departure_time,
-                    n.human_readable_instruction,
-                    n.name,
-                    n.arrival_time
+                trip.append(Direction(
+                    from_node=current_node,
+                    datetime_depart=n.departure_time,
+                    human_readable_instruction=n.human_readable_instruction,
+                    to_node=n.name,
+                    datetime_arrive=n.arrival_time
                 ))
                 current_node = n.name
         # Return this list. We are done. The algorithm is finished.
