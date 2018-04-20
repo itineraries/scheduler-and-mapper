@@ -117,7 +117,8 @@ class AgencyNYU(Agency):
                 ]:
                     for from_node_index, to_node_index \
                         in schedule.get_columns_indices(from_node, to_node):
-                        # Filter out the rows with None for either stop.
+                        # Filter out the rows with None for either stop and
+                        # rows where pickup is unavailable from from_node.
                         # Recall that from_node_index < to_node_index is
                         # guaranteed by schedule.get_columns_indices.
                         times = [
@@ -125,6 +126,7 @@ class AgencyNYU(Agency):
                             for row in schedule.other_rows
                             if to_node_index < len(row)
                             and row[from_node_index] is not None
+                            and row[from_node_index].pickup
                             and row[to_node_index] is not None
                         ]
                         try:
@@ -169,46 +171,44 @@ class AgencyNYU(Agency):
                                     None
                                 )
                             ):
-                                # Check whether pickups are allowed.
-                                if row[0].pickup:
-                                    # Add the edge.
-                                    d = datetime.datetime.combine(
-                                        date_arrive
+                                # Add the edge.
+                                d = datetime.datetime.combine(
+                                    date_arrive
+                                    if backwards else
+                                    date_depart,
+                                    MIDNIGHT
+                                ) + row[0].time
+                                a = datetime.datetime.combine(
+                                    date_arrive
+                                    if backwards else
+                                    date_depart,
+                                    MIDNIGHT
+                                ) + row[1].time
+                                heapq.heappush(
+                                    edges_heap,
+                                    EdgeHeapQKey(
+                                        datetime.datetime.max - d
                                         if backwards else
-                                        date_depart,
-                                        MIDNIGHT
-                                    ) + row[0].time
-                                    a = datetime.datetime.combine(
-                                        date_arrive
-                                        if backwards else
-                                        date_depart,
-                                        MIDNIGHT
-                                    ) + row[1].time
-                                    heapq.heappush(
-                                        edges_heap,
-                                        EdgeHeapQKey(
-                                            datetime.datetime.max - d
-                                            if backwards else
-                                            a - datetime.datetime.min,
-                                            cls.UnweightedEdge(
-                                                d,
-                                                a,
-                                                "Take Route " +
-                                                schedule.route + "." +
-                                                (
-                                                    " Signal driver to stop."
-                                                    if row[1].soft
-                                                    else ""
-                                                )
+                                        a - datetime.datetime.min,
+                                        cls.UnweightedEdge(
+                                            d,
+                                            a,
+                                            "Take Route " +
+                                            schedule.route + "." +
+                                            (
+                                                " Signal driver to stop."
+                                                if row[1].soft
+                                                else ""
                                             )
                                         )
                                     )
-                                    if backwards:
-                                        if a < first_arrival:
-                                            first_arrival = a
-                                    elif d > last_departure:
-                                        last_departure = d
-                                    days_without_edges = 0
+                                )
+                                if backwards:
+                                    if a < first_arrival:
+                                        first_arrival = a
+                                elif d > last_departure:
+                                    last_departure = d
+                                days_without_edges = 0
                 if backwards:
                     # Decrement the day and continue.
                     try:
