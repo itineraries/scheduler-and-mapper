@@ -4,21 +4,17 @@ import sys
 import datetime
 import csv
 import keyring
-from agency_common import Agency
+from agency_walking import AgencyWalking
 from common_walking import Point, STOP_LOCATIONS_CSV
 
 _apikey = keyring.get_password("google_maps", "default")
 
 ONE_MINUTE = datetime.timedelta(minutes=1)
 
-class AgencyWalkingDynamic(Agency):
+class AgencyWalkingDynamic(AgencyWalking):
         edges = {}
         stops = []
         stop_dict = {}
-        max_seconds = (
-                datetime.datetime.max - datetime.datetime.min
-            ).total_seconds()
-        
         def display_dict(cls):
                 ##this is just a tester method to make sure the dictionary is correct
                 ##not to be used in production
@@ -124,14 +120,14 @@ class AgencyWalkingDynamic(Agency):
         ):
                 key = (from_node, to_node)
                 #the nodes must be in the dictionary otherwise we can't do anything.
-                if key in cls.edges:  ##TODO check consecutive agency
+                if key in cls.edges and (consecutive_agency is None or \
+                                         not issubclass(consecutive_agency, AgencyWalking)): ##check consecutive agency we don't want to repeat agencies
                         distance, seconds, address = cls.edges[key]
                         if seconds < cls.max_seconds: # the distance between the two nodes isn't impossible
                                 travel_duration = datetime.timedelta(seconds=seconds)
                                 if datetime_depart == datetime.datetime.min and datetime_arrive != datetime.datetime.max: ##arrival time passed in
                                         if datetime_arrive > datetime.datetime.min + travel_duration: ##the arrival time isn't impossible
                                                 datetime_depart = datetime_arrive - travel_duration
-                                                #print("Walk " + distance + " to " + address + ". ")
                                                 while True:
                                                         yield cls.UnweightedEdge(
                                                             datetime_depart,
@@ -150,7 +146,6 @@ class AgencyWalkingDynamic(Agency):
                                             datetime_arrive > \
                                             datetime.datetime.min + travel_duration:
                                             datetime_arrive = datetime_depart + travel_duration
-                                            #print("Walk " + distance + " to " + address + ". ")
                                             while True:
                                                 yield cls.UnweightedEdge(
                                                     datetime_depart,
@@ -163,6 +158,11 @@ class AgencyWalkingDynamic(Agency):
                                                 datetime_arrive += ONE_MINUTE
                                                                    
                                         
-                        
+##destination = "6 MetroTech"
+##origin = "40 East 7th St. New York"
+##s = AgencyWalkingDynamic()
+##s.use_origin_destination(origin, destination)
+##s.display_dict()
+##for e in s.get_edge(origin, "715 Broadway", datetime.datetime.now()):
+##        print(e.human_readable_instruction)
 
-    main()
