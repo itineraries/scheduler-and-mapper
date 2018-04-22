@@ -8,8 +8,8 @@ ONE_MINUTE = datetime.timedelta(minutes=1)
 
 class AgencyWalkingDynamic(AgencyWalking):
         edges = {}
-        pick_stop= open("walking_dynamic.pickle",'rb')      
-        stops, stop_dict = pickle.load(pick_stop)
+        with open("walking_dynamic.pickle",'rb') as pick_stop:     
+                stops, stop_dict = pickle.load(pick_stop)
                         
         def display_dict(cls):
                 ##this is just a tester method to make sure the dictionary is correct
