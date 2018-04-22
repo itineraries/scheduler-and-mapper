@@ -2,7 +2,6 @@
 import attr, base64, struct
 from common import file_in_this_dir
 STOP_LOCATIONS_CSV = file_in_this_dir("Stop Locations.csv")
-WALKING_TIMES_PICKLE = file_in_this_dir("Walking.pickle")
 
 @attr.s
 class Point:

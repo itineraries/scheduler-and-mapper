@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import datetime, pickle
 from agency_common import Agency
-from common_walking import WALKING_TIMES_PICKLE
+from common_walking_static import WALKING_TIMES_PICKLE
 
 ONE_MINUTE = datetime.timedelta(minutes=1)
 
