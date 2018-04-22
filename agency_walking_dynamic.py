@@ -1,11 +1,6 @@
-import json
-import requests
-import sys
-import datetime
-import csv
-import keyring
+import json, requests, sys, datetime, csv, keyring, pickle
 from agency_walking import AgencyWalking
-from common_walking import Point, STOP_LOCATIONS_CSV
+from common_walking import STOP_LOCATIONS_CSV
 
 _apikey = keyring.get_password("google_maps", "default")
 
@@ -13,27 +8,14 @@ ONE_MINUTE = datetime.timedelta(minutes=1)
 
 class AgencyWalkingDynamic(AgencyWalking):
         edges = {}
-        stops = []
-        stop_dict = {}
+        pick_stop= open("walking_dynamic.pickle",'rb')      
+        stops, stop_dict = pickle.load(pick_stop)
+                        
         def display_dict(cls):
                 ##this is just a tester method to make sure the dictionary is correct
                 ##not to be used in production
                 for k,v in cls.edges.items():
                         print("Origin: {} Destination: {} Distance: {} Travel Time: {} ".format(k[0], k[1], v[0], v[1]))
-        @classmethod
-        def parse_csv(cls):
-            f = open(STOP_LOCATIONS_CSV)
-            stop_csv = csv.reader(f)
-            first = True
-            for stop in stop_csv:
-                if first:
-                    first = False ##skip the first row
-                    continue
-                coord_str = (stop[3] + ',' + stop[4]).replace(" ", "")
-                stop_name = stop[0]
-                cls.stop_dict[coord_str] = stop_name
-                cls.stops.append(coord_str)
-        
 
         def matrix_api_call(origins, destinations):
                 api_key = _apikey
@@ -67,8 +49,6 @@ class AgencyWalkingDynamic(AgencyWalking):
   
         @classmethod
         def use_origin_destination(cls,origin, destination):
-                cls.parse_csv()
-                
                 #This is from the origin to bus stops
                 if origin not in cls.stop_dict.values():
                         origin_from_nodes = [origin]
@@ -119,50 +99,54 @@ class AgencyWalkingDynamic(AgencyWalking):
                 consecutive_agency=None
         ):
                 key = (from_node, to_node)
-                #the nodes must be in the dictionary otherwise we can't do anything.
-                if key in cls.edges and (consecutive_agency is None or \
-                                         not issubclass(consecutive_agency, AgencyWalking)): ##check consecutive agency we don't want to repeat agencies
-                        distance, seconds, address = cls.edges[key]
-                        if seconds < cls.max_seconds: # the distance between the two nodes isn't impossible
-                                travel_duration = datetime.timedelta(seconds=seconds)
-                                if datetime_depart == datetime.datetime.min and datetime_arrive != datetime.datetime.max: ##arrival time passed in
-                                        if datetime_arrive > datetime.datetime.min + travel_duration: ##the arrival time isn't impossible
-                                                datetime_depart = datetime_arrive - travel_duration
-                                                while True:
+                
+                if consecutive_agency is None or not issubclass(consecutive_agency, AgencyWalking):
+                        ##check consecutive agency we don't want to repeat agencies
+                        #the nodes must be in the dictionary otherwise we can't do anything.
+                        try:
+                                distance, seconds, address = cls.edges[key]
+                                if seconds < cls.max_seconds: # the distance between the two nodes isn't impossible
+                                        travel_duration = datetime.timedelta(seconds=seconds)
+                                        if datetime_depart == datetime.datetime.min and \
+                                           datetime_arrive != datetime.datetime.max: ##arrival time passed in
+                                                if datetime_arrive > datetime.datetime.min + travel_duration: ##the arrival time isn't impossible
+                                                        datetime_depart = datetime_arrive - travel_duration
+                                                        while True:
+                                                                yield cls.UnweightedEdge(
+                                                                    datetime_depart,
+                                                                    datetime_arrive,
+                                                                    human_readable_instruction="Walk " + distance + " to " + address + ". "
+                                                                )
+                                                                if datetime_depart - datetime.datetime.min <= ONE_MINUTE:
+                                                                    break
+                                                                datetime_depart -= ONE_MINUTE
+                                                                datetime_arrive -= ONE_MINUTE
+                                        else:
+                                                # Yield the earliest trip and then go forward in time.
+                                                stop = datetime_arrive
+                                                if datetime_depart < \
+                                                    datetime.datetime.max - travel_duration and \
+                                                    datetime_arrive > \
+                                                    datetime.datetime.min + travel_duration:
+                                                    datetime_arrive = datetime_depart + travel_duration
+                                                    while True:
                                                         yield cls.UnweightedEdge(
                                                             datetime_depart,
                                                             datetime_arrive,
                                                             human_readable_instruction="Walk " + distance + " to " + address + ". "
                                                         )
-                                                        if datetime_depart - datetime.datetime.min <= ONE_MINUTE:
+                                                        if datetime.datetime.max - datetime_arrive <= ONE_MINUTE:
                                                             break
-                                                        datetime_depart -= ONE_MINUTE
-                                                        datetime_arrive -= ONE_MINUTE
-                                else:
-                                        # Yield the earliest trip and then go forward in time.
-                                        stop = datetime_arrive
-                                        if datetime_depart < \
-                                            datetime.datetime.max - travel_duration and \
-                                            datetime_arrive > \
-                                            datetime.datetime.min + travel_duration:
-                                            datetime_arrive = datetime_depart + travel_duration
-                                            while True:
-                                                yield cls.UnweightedEdge(
-                                                    datetime_depart,
-                                                    datetime_arrive,
-                                                    human_readable_instruction="Walk " + distance + " to " + address + ". "
-                                                )
-                                                if datetime.datetime.max - datetime_arrive <= ONE_MINUTE:
-                                                    break
-                                                datetime_depart += ONE_MINUTE
-                                                datetime_arrive += ONE_MINUTE
-                                                                   
-                                        
+                                                        datetime_depart += ONE_MINUTE
+                                                        datetime_arrive += ONE_MINUTE
+                        except KeyError:                                      
+                                    return     
 ##destination = "6 MetroTech"
 ##origin = "40 East 7th St. New York"
 ##s = AgencyWalkingDynamic()
 ##s.use_origin_destination(origin, destination)
 ##s.display_dict()
 ##for e in s.get_edge(origin, "715 Broadway", datetime.datetime.now()):
-##        print(e.human_readable_instruction)
+##       print(e.human_readable_instruction)
+##       break
 
