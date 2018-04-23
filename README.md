@@ -2,7 +2,7 @@
 This code is responsible for parsing schedule data and finding itineraries.
 
 ## Install dependencies
-1. Install the following Python libraries: `attrs python-dateutil keyring`
+1. Install the following Python libraries: `attrs python-dateutil keyring requests`
 2. Get a [Bing Maps API key](https://msdn.microsoft.com/library/ff428642.aspx)
    and store it with this command: `keyring set bing_maps default`
 3. Clone [string-match](https://github.com/itineraries/string-match) to `..`.
