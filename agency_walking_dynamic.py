@@ -8,11 +8,11 @@ ONE_MINUTE = datetime.timedelta(minutes=1)
 
 class AgencyWalkingDynamic(AgencyWalking):
         edges = {}
-        with open("walking_dynamic.pickle",'rb') as pick_stop:     
+        with open("walking_dynamic.pickle",'rb') as pick_stop:
                 stop_dict = pickle.load(pick_stop)
         stops = list(stop_dict.keys())
         stop_names = set(stop_dict.values())
-        
+
         def display_dict(cls):
                 ##this is just a tester method to make sure the dictionary is correct
                 ##not to be used in production
@@ -30,7 +30,7 @@ class AgencyWalkingDynamic(AgencyWalking):
                                 'units': 'imperial',
                                 'region': 'us', ##It's most likely that the location is in the US so we give it precedence
                                 'origins' : '|'.join(origins),
-                                'destinations' : '|'.join(destinations), 
+                                'destinations' : '|'.join(destinations),
                                 'mode' : 'walking',
                                 'api_key' : api_key
                 }
@@ -39,16 +39,16 @@ class AgencyWalkingDynamic(AgencyWalking):
                                 print('HTTP status code {} received, program terminated.'.format(r.status_code))
                 else:
                         try:
-                                # Try/catch block should capture the problems when loading JSON data, 
-                                # such as when JSON is broken. 
+                                # Try/catch block should capture the problems when loading JSON data,
+                                # such as when JSON is broken.
                                 matrix = json.loads(r.text)
                                 return matrix
                         except ValueError:
-                                print('Error while parsing JSON response, program terminated.')                        
+                                print('Error while parsing JSON response, program terminated.')
 
-                                        
 
-  
+
+
         @classmethod
         def use_origin_destination(cls,origin, destination):
                 #This is from the origin to bus stops
@@ -70,7 +70,7 @@ class AgencyWalkingDynamic(AgencyWalking):
                                             cls.edges[key] = (cell['distance']['text'], cell['duration']['value'], orig['origin_addresses'][0])
                                     else:
                                             print("Error with edge")
-                                                          
+
                 #This is from the bus stops to destination
                 if destination not in cls.stop_names:
                         dest_from_nodes = cls.stops
@@ -90,10 +90,10 @@ class AgencyWalkingDynamic(AgencyWalking):
                                             cls.edges[key] = (cell['distance']['text'], cell['duration']['value'], dest['destination_addresses'][0])
                                     else:
                                             print("Error with edge")
-           
-                               
 
-        
+
+
+
         @classmethod
         def get_edge(cls, from_node, to_node,
                 datetime_depart=datetime.datetime.min,
@@ -101,7 +101,7 @@ class AgencyWalkingDynamic(AgencyWalking):
                 consecutive_agency=None
         ):
                 key = (from_node, to_node)
-                
+
                 if consecutive_agency is None or not issubclass(consecutive_agency, AgencyWalking):
                         ##check consecutive agency we don't want to repeat agencies
                         #the nodes must be in the dictionary otherwise we can't do anything.
@@ -141,15 +141,16 @@ class AgencyWalkingDynamic(AgencyWalking):
                                                             break
                                                         datetime_depart += ONE_MINUTE
                                                         datetime_arrive += ONE_MINUTE
-                        except KeyError:                                      
-                                    return     
-destination = "6 MetroTech"
-origin = "Kimmel Center For University Life"
-s = AgencyWalkingDynamic()
-s.use_origin_destination(origin, origin)
-s.display_dict()
-s.get_edge(origin, "715 Broadway" , datetime.datetime.now())
-for e in s.get_edge("715 Broadway", origin , datetime.datetime.now()):
-       print(e.human_readable_instruction)
-       break
+                        except KeyError:
+                                    return
+if __name__ == "__main__":
+        destination = "6 MetroTech"
+        origin = "Kimmel Center For University Life"
+        s = AgencyWalkingDynamic()
+        s.use_origin_destination(origin, origin)
+        s.display_dict()
+        s.get_edge(origin, "715 Broadway" , datetime.datetime.now())
+        for e in s.get_edge("715 Broadway", origin , datetime.datetime.now()):
+               print(e.human_readable_instruction)
+               break
 
