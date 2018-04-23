@@ -2,6 +2,9 @@
 import datetime
 from agency_common import Agency
 
+_added_arguments = False
+_handled_arguments = False
+
 class AgencyWalking(Agency):
     '''
     The purpose of this class is to add the --walking-max argument to the
@@ -19,11 +22,9 @@ class AgencyWalking(Agency):
     max_seconds = (
         datetime.datetime.max - datetime.datetime.min
     ).total_seconds()
-    _added_arguments = False
-    _handled_arguments = False
     @classmethod
     def add_arguments(cls, arg_parser_add_argument):
-        if not cls._added_arguments:
+        if not _added_arguments:
             arg_parser_add_argument(
                 "--walking-max",
                 type=float,
@@ -33,13 +34,13 @@ class AgencyWalking(Agency):
                     "the longest period of time that you are willing to walk "
                     "at a time without using some other form of transportation"
             )
-            cls._added_arguments = True
+            _added_arguments = True
     @classmethod
     def handle_parsed_arguments(cls, args_parsed):
-        if not cls._handled_arguments:
+        if not _handled_arguments:
             max_seconds = args_parsed.walking_max * 60.0
             if max_seconds <= cls.max_seconds:
                 cls.max_seconds = max_seconds
             else:
                 print("Warning: --walking-max was changed to", cls.max_seconds)
-            cls._handled_arguments = True
+            _handled_arguments = True
