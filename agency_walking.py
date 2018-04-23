@@ -4,7 +4,13 @@ from agency_common import Agency
 
 _added_arguments = False
 _handled_arguments = False
+_max_seconds = (
+    datetime.datetime.max - datetime.datetime.min
+).total_seconds()
 
+class MaxSecondsGet:
+    def __get__(self, instance, owner):
+        return _max_seconds
 class AgencyWalking(Agency):
     '''
     The purpose of this class is to add the --walking-max argument to the
@@ -19,30 +25,28 @@ class AgencyWalking(Agency):
     This class does not implement get_edge, so it cannot yield edges. However,
     subclasses of this class may implement get_edge.
     '''
-    max_seconds = (
-        datetime.datetime.max - datetime.datetime.min
-    ).total_seconds()
-    @classmethod
-    def add_arguments(cls, arg_parser_add_argument):
+    max_seconds = MaxSecondsGet()
+    @staticmethod
+    def add_arguments(arg_parser_add_argument):
         global _added_arguments
         if not _added_arguments:
             arg_parser_add_argument(
                 "--walking-max",
                 type=float,
-                default=cls.max_seconds / 60.0,
+                default=_max_seconds / 60.0,
                 metavar="minutes",
                 help=
                     "the longest period of time that you are willing to walk "
                     "at a time without using some other form of transportation"
             )
             _added_arguments = True
-    @classmethod
-    def handle_parsed_arguments(cls, args_parsed):
-        global _handled_arguments
+    @staticmethod
+    def handle_parsed_arguments(args_parsed):
+        global _handled_arguments, _max_seconds
         if not _handled_arguments:
             max_seconds = args_parsed.walking_max * 60.0
-            if max_seconds <= cls.max_seconds:
-                cls.max_seconds = max_seconds
+            if max_seconds <= _max_seconds:
+                _max_seconds = max_seconds
             else:
-                print("Warning: --walking-max was changed to", cls.max_seconds)
+                print("Warning: --walking-max was changed to", _max_seconds)
             _handled_arguments = True
