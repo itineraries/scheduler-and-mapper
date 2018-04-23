@@ -17,10 +17,10 @@ def parse_csv():
         stop_dict[coord_str] = stop_name
         stops.append(coord_str)
     f.close()
-    return (stops, stop_dict)
+    return stop_dict
 
-stops, stop_dict = parse_csv()
+stop_dict = parse_csv()
 f = open("walking_dynamic.pickle",'wb')
-pickle.dump((stops,stop_dict), f)
+pickle.dump(stop_dict, f)
 f.close()
 
