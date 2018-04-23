@@ -9,14 +9,16 @@ ONE_MINUTE = datetime.timedelta(minutes=1)
 class AgencyWalkingDynamic(AgencyWalking):
         edges = {}
         with open("walking_dynamic.pickle",'rb') as pick_stop:     
-                stops, stop_dict = pickle.load(pick_stop)
-                        
+                stop_dict = pickle.load(pick_stop)
+        stops = list(stop_dict.keys())
+        stop_names = set(stop_dict.values())
+        
         def display_dict(cls):
                 ##this is just a tester method to make sure the dictionary is correct
                 ##not to be used in production
                 for k,v in cls.edges.items():
                         print("Origin: {} Destination: {} Distance: {} Travel Time: {} ".format(k[0], k[1], v[0], v[1]))
-
+        @staticmethod
         def matrix_api_call(origins, destinations):
                 api_key = _apikey
                 # Google Distance Matrix base URL to which all other parameters are attached
@@ -50,7 +52,7 @@ class AgencyWalkingDynamic(AgencyWalking):
         @classmethod
         def use_origin_destination(cls,origin, destination):
                 #This is from the origin to bus stops
-                if origin not in cls.stop_dict.values():
+                if origin not in cls.stop_names:
                         origin_from_nodes = [origin]
                         origin_to_nodes = cls.stops
                         orig = cls.matrix_api_call(origin_from_nodes, origin_to_nodes)
@@ -65,12 +67,12 @@ class AgencyWalkingDynamic(AgencyWalking):
                                             ##the distance is being sent in text form as that is to be read by humans while the duration is sent
                                             ##by value as it is only considered by the computer
                                             ##I think I will change this though to just send cell['distance'] and cell['duration']
-                                            cls.edges[key] = (cell['distance']['text'], cell['duration']['value'], to_node)
+                                            cls.edges[key] = (cell['distance']['text'], cell['duration']['value'], orig['origin_addresses'][0])
                                     else:
                                             print("Error with edge")
                                                           
                 #This is from the bus stops to destination
-                if destination not in cls.stop_dict.values():
+                if destination not in cls.stop_names:
                         dest_from_nodes = cls.stops
                         dest_to_nodes = [destination]
                         dest = cls.matrix_api_call(dest_from_nodes, dest_to_nodes)
@@ -85,7 +87,7 @@ class AgencyWalkingDynamic(AgencyWalking):
                                             ##the distance is being sent in text form as that is to be read by humans while the duration is sent
                                             ##by value as it is only considered by the computer
                                             ##I think I will change this though to just send cell['distance'] and cell['duration']
-                                            cls.edges[key] = (cell['distance']['text'], cell['duration']['value'], from_node)
+                                            cls.edges[key] = (cell['distance']['text'], cell['duration']['value'], dest['destination_addresses'][0])
                                     else:
                                             print("Error with edge")
            
@@ -115,7 +117,7 @@ class AgencyWalkingDynamic(AgencyWalking):
                                                                 yield cls.UnweightedEdge(
                                                                     datetime_depart,
                                                                     datetime_arrive,
-                                                                    human_readable_instruction="Walk " + distance + " to " + address + ". "
+                                                                    human_readable_instruction="Walk " + distance + " to " + address + "."
                                                                 )
                                                                 if datetime_depart - datetime.datetime.min <= ONE_MINUTE:
                                                                     break
@@ -133,7 +135,7 @@ class AgencyWalkingDynamic(AgencyWalking):
                                                         yield cls.UnweightedEdge(
                                                             datetime_depart,
                                                             datetime_arrive,
-                                                            human_readable_instruction="Walk " + distance + " to " + address + ". "
+                                                            human_readable_instruction="Walk " + distance + " to " + address + "."
                                                         )
                                                         if datetime.datetime.max - datetime_arrive <= ONE_MINUTE:
                                                             break
@@ -141,12 +143,13 @@ class AgencyWalkingDynamic(AgencyWalking):
                                                         datetime_arrive += ONE_MINUTE
                         except KeyError:                                      
                                     return     
-##destination = "6 MetroTech"
-##origin = "40 East 7th St. New York"
-##s = AgencyWalkingDynamic()
-##s.use_origin_destination(origin, destination)
-##s.display_dict()
-##for e in s.get_edge(origin, "715 Broadway", datetime.datetime.now()):
-##       print(e.human_readable_instruction)
-##       break
+destination = "6 MetroTech"
+origin = "Kimmel Center For University Life"
+s = AgencyWalkingDynamic()
+s.use_origin_destination(origin, origin)
+s.display_dict()
+s.get_edge(origin, "715 Broadway" , datetime.datetime.now())
+for e in s.get_edge("715 Broadway", origin , datetime.datetime.now()):
+       print(e.human_readable_instruction)
+       break
 
