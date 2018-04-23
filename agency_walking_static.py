@@ -1,35 +1,14 @@
 #!/usr/bin/env python3
 import datetime, pickle
-from agency_common import Agency
-from common_walking import WALKING_TIMES_PICKLE
+from agency_walking import AgencyWalking
+from common_walking_static import WALKING_TIMES_PICKLE
 
 ONE_MINUTE = datetime.timedelta(minutes=1)
 
 with open(WALKING_TIMES_PICKLE, "rb") as f:
     WALKING_TIMES = pickle.load(f)
 
-class AgencyWalkingStatic(Agency):
-    max_seconds = (
-        datetime.datetime.max - datetime.datetime.min
-    ).total_seconds()
-    @classmethod
-    def add_arguments(cls, arg_parser_add_argument):
-        arg_parser_add_argument(
-            "--walking-max",
-            type=float,
-            default=cls.max_seconds / 60.0,
-            metavar="minutes",
-            help=
-                "the longest period of time that you are willing to walk at a "
-                "time from one bus stop to another"
-        )
-    @classmethod
-    def handle_parsed_arguments(cls, args_parsed):
-        max_seconds = args_parsed.walking_max * 60.0 # convert from minutes
-        if max_seconds <= cls.max_seconds:
-            cls.max_seconds = max_seconds
-        else:
-            print("Warning: --walking-max was changed to", cls.max_seconds)
+class AgencyWalkingStatic(AgencyWalking):
     @classmethod
     def get_edge(
         cls,
@@ -39,8 +18,8 @@ class AgencyWalkingStatic(Agency):
         datetime_arrive=datetime.datetime.max,
         consecutive_agency=None
     ):
-        # Do not allow consecutive walking instructions.
-        if consecutive_agency != cls:
+        if consecutive_agency is None or \
+            not issubclass(consecutive_agency, AgencyWalking):
             try:
                 seconds, directions_file = WALKING_TIMES[(from_node, to_node)]
             except KeyError:

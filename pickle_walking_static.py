@@ -7,8 +7,8 @@ and run match_stops_locations.
 '''
 import csv, errno, itertools, json, os, pickle, sys
 from common import file_in_this_dir
-from common_walking import WALKING_TIMES_PICKLE, STOP_LOCATIONS_CSV, Point, \
-    Edge
+from common_walking import STOP_LOCATIONS_CSV, Point, Edge
+from common_walking_static import WALKING_TIMES_PICKLE
 import bing_maps
 WALKING_DIRECTORY = file_in_this_dir("Walking")
 
