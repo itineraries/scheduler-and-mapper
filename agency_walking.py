@@ -24,6 +24,7 @@ class AgencyWalking(Agency):
     ).total_seconds()
     @classmethod
     def add_arguments(cls, arg_parser_add_argument):
+        global _added_arguments
         if not _added_arguments:
             arg_parser_add_argument(
                 "--walking-max",
@@ -37,6 +38,7 @@ class AgencyWalking(Agency):
             _added_arguments = True
     @classmethod
     def handle_parsed_arguments(cls, args_parsed):
+        global _handled_arguments
         if not _handled_arguments:
             max_seconds = args_parsed.walking_max * 60.0
             if max_seconds <= cls.max_seconds:
