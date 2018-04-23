@@ -19,21 +19,27 @@ class AgencyWalking(Agency):
     max_seconds = (
         datetime.datetime.max - datetime.datetime.min
     ).total_seconds()
+    _added_arguments = False
+    _handled_arguments = False
     @classmethod
     def add_arguments(cls, arg_parser_add_argument):
-        arg_parser_add_argument(
-            "--walking-max",
-            type=float,
-            default=cls.max_seconds / 60.0,
-            metavar="minutes",
-            help=
-                "the longest period of time that you are willing to walk at a "
-                "time without using some other form of transportation"
-        )
+        if not cls._added_arguments:
+            arg_parser_add_argument(
+                "--walking-max",
+                type=float,
+                default=cls.max_seconds / 60.0,
+                metavar="minutes",
+                help=
+                    "the longest period of time that you are willing to walk "
+                    "at a time without using some other form of transportation"
+            )
+            cls._added_arguments = True
     @classmethod
     def handle_parsed_arguments(cls, args_parsed):
-        max_seconds = args_parsed.walking_max * 60.0 # convert from minutes
-        if max_seconds <= cls.max_seconds:
-            cls.max_seconds = max_seconds
-        else:
-            print("Warning: --walking-max was changed to", cls.max_seconds)
+        if not cls._handled_arguments:
+            max_seconds = args_parsed.walking_max * 60.0
+            if max_seconds <= cls.max_seconds:
+                cls.max_seconds = max_seconds
+            else:
+                print("Warning: --walking-max was changed to", cls.max_seconds)
+            cls._handled_arguments = True
