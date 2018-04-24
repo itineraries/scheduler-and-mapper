@@ -59,7 +59,8 @@ def get_route(
         'key': _apikey
     })
     url = "https://dev.virtualearth.net/REST/v1/Routes/" + \
-        _travel_mode_map[travel_mode] + "?" + urllib.parse.urlencode(parameters)
+        _travel_mode_map[travel_mode] + \
+        "?" + urllib.parse.urlencode(parameters)
     # Send request.
     r = urllib.request.urlopen(url)
     try:

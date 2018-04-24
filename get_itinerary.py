@@ -50,8 +50,8 @@ def parse_args(agencies=()):
         metavar="N",
         help=
             "(implies --depart) if set, instead of directions to the "
-            "destination, the next N departures from the origin after datetime "
-            "are returned"
+            "destination, the next N departures from the origin after "
+            "datetime are returned"
     )
     # Allow agencies to add their own arguments.
     for agency in agencies:
@@ -99,7 +99,7 @@ def main():
         AgencyWalkingStatic,
         AgencyWalkingDynamic,
     )
-    assert all(issubclass(a, Agency) or isinstance(a, Agency) for a in agencies)
+    assert all(issubclass(a, Agency) for a in agencies)
     args_parsed = parse_args(agencies)
     if args_parsed.list_departures:
         # The user asked for a list of departures from the origin.
@@ -134,12 +134,14 @@ def main():
                     print(" -", direction)
                 print(
                     "Total time:",
-                    itinerary[-1].datetime_arrive - itinerary[0].datetime_arrive
+                    itinerary[-1].datetime_arrive -
+                    itinerary[0].datetime_arrive
                     if args_parsed.depart else
-                    itinerary[-1].datetime_depart - itinerary[0].datetime_depart
+                    itinerary[-1].datetime_depart -
+                    itinerary[0].datetime_depart
                 )
         else:
-            print("The origin and the destination are the same. That was easy.")
+            print("The origin and the destination are the same.")
 
 if __name__ == "__main__":
     main()
