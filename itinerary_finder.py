@@ -123,6 +123,9 @@ def find_itinerary(agencies, origin, destination, trip_datetime, depart=False):
     there are no restrictions. The strings may be the names of bus stops. They
     might be street addresses. They might be the names of buildings.
     
+    The origin and destination must not be equal. If they are equal, then
+    ItineraryNotPossible will be raised.
+    
     Arguments:
         agencies:
             An iterable of subclasses of Agency
