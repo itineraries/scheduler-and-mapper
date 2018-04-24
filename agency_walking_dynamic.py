@@ -1,6 +1,6 @@
 import json, requests, sys, datetime, csv, keyring, pickle
 from agency_walking import AgencyWalking
-from common_walking import STOP_LOCATIONS_CSV
+from common import STOP_LOCATIONS_CSV
 
 _apikey = keyring.get_password("google_maps", "default")
 

@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 import attr, base64, struct
-from common import file_in_this_dir
-STOP_LOCATIONS_CSV = file_in_this_dir("Stop Locations.csv")
 
 @attr.s
 class Point:

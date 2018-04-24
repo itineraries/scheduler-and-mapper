@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import csv, json, sys
-from common import NODE_LIST_TXT, file_in_this_dir
-from common_walking import Point, STOP_LOCATIONS_CSV
+from common import NODE_LIST_TXT, STOP_LOCATIONS_CSV, file_in_this_dir
+from common_walking import Point
 sys.path.insert(0, file_in_this_dir("../string-match"))
 import matcher
 STOP_LOCATION_OVERRIDES_CSV = file_in_this_dir("Stop Location Overrides.csv")

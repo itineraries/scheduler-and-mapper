@@ -1,6 +1,6 @@
 import pickle
 import csv
-from common_walking import STOP_LOCATIONS_CSV
+from common import STOP_LOCATIONS_CSV
 
 def parse_csv():
     f = open(STOP_LOCATIONS_CSV)
