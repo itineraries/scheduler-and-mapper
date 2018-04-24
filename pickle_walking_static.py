@@ -5,10 +5,10 @@ Use this script to prepare the pickle that agency_walking_static needs.
 Before running this script, make sure that all stops are in the node list
 and run match_stops_locations.
 '''
-import csv, errno, itertools, json, os, pickle, sys
-from common import STOP_LOCATIONS_CSV, file_in_this_dir, Point, Edge
+import errno, itertools, json, os, pickle, sys
+from common import file_in_this_dir, Edge
 from common_walking_static import WALKING_TIMES_PICKLE
-import bing_maps
+import bing_maps, stops
 WALKING_DIRECTORY = file_in_this_dir("Walking")
 
 def walking_directions_filename(edge):
@@ -20,30 +20,14 @@ def walking_directions_filename(edge):
             precision=5
         ) + ".json"
     )
-def read_stop_locations(filename):
+def all_edges():
     '''
-    Reads the CSV file written by match_stops_locations
-    and returns a dictionary from each stop name to its
-    location, represented by a Point.
-    '''
-    with open(filename, "r", newline="", encoding="UTF-8") as f:
-        return {
-            row["From PDFs"]: Point(
-                lat=row["Latitude"],
-                lng=row["Longitude"]
-            )
-            for row
-            in csv.DictReader(f)
-        }
-def all_edges(stop_locations_dict):
-    '''
-    Takes a dictionary from read_stop_locations and yields a
-    (name, name, Edge, filename) tuple from every location to every other
-    location. The filename refers to the name of the file in which the API
-    response should be cached.
+    Takes stops.name_to_point and yields a (name, name, Edge, filename) tuple
+    from every location to every other location. The filename refers to the
+    name of the file in which the API response should be cached.
     '''
     for (from_name, from_node), (to_name, to_node) in itertools.permutations(
-        stop_locations_dict.items(),
+        stops.name_to_point.items(),
         2
     ):
         edge = Edge(from_node, to_node)
@@ -59,9 +43,7 @@ def main():
     # Figure out which walking directions are missing.
     walking_times = {}
     try:
-        for from_name, to_name, edge, filename in all_edges(
-            read_stop_locations(STOP_LOCATIONS_CSV)
-        ):
+        for from_name, to_name, edge, filename in all_edges():
             # Get walking directions.
             try:
                 # If the walking directions are cached, read them from cache.

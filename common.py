@@ -11,6 +11,8 @@ STOP_LOCATIONS_CSV = file_in_this_dir("Stop Locations.csv")
 class Point:
     lat = attr.ib(converter=float)
     lng = attr.ib(converter=float)
+    def __str__(self):
+        return "{},{}".format(self.lat, self.lng)
 @attr.s
 class Edge:
     from_node = attr.ib(validator=attr.validators.instance_of(Point))

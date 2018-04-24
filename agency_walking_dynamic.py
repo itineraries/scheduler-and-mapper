@@ -1,6 +1,6 @@
 import json, requests, sys, datetime, csv, keyring, pickle
 from agency_walking import AgencyWalking
-from common import STOP_LOCATIONS_CSV
+import stops
 
 _apikey = keyring.get_password("google_maps", "default")
 
@@ -8,10 +8,7 @@ ONE_MINUTE = datetime.timedelta(minutes=1)
 
 class AgencyWalkingDynamic(AgencyWalking):
         edges = {}
-        with open("walking_dynamic.pickle",'rb') as pick_stop:
-                stop_dict = pickle.load(pick_stop)
-        stops = list(stop_dict.keys())
-        stop_names = set(stop_dict.values())
+        stops = list(stops.geo_str_to_name.keys())
 
         def display_dict(cls):
                 ##this is just a tester method to make sure the dictionary is correct
@@ -52,7 +49,7 @@ class AgencyWalkingDynamic(AgencyWalking):
         @classmethod
         def use_origin_destination(cls,origin, destination):
                 #This is from the origin to bus stops
-                if origin not in cls.stop_names:
+                if origin not in stops.name_to_point:
                         origin_from_nodes = [origin]
                         origin_to_nodes = cls.stops
                         orig = cls.matrix_api_call(origin_from_nodes, origin_to_nodes)
@@ -61,7 +58,7 @@ class AgencyWalkingDynamic(AgencyWalking):
                                     row = orig['rows'][0]
                                     cell = row['elements'][to_node_i]
                                     from_node = origin
-                                    to_node_name = cls.stop_dict[cls.stops[to_node_i]] ##we have to get the bus stop name
+                                    to_node_name = stops.geo_str_to_name[cls.stops[to_node_i]] ##we have to get the bus stop name
                                     if cell['status'] == 'OK':
                                             key = (from_node, to_node_name)
                                             ##the distance is being sent in text form as that is to be read by humans while the duration is sent
@@ -72,7 +69,7 @@ class AgencyWalkingDynamic(AgencyWalking):
                                             print("Error with edge")
 
                 #This is from the bus stops to destination
-                if destination not in cls.stop_names:
+                if destination not in stops.name_to_point:
                         dest_from_nodes = cls.stops
                         dest_to_nodes = [destination]
                         dest = cls.matrix_api_call(dest_from_nodes, dest_to_nodes)
@@ -81,7 +78,7 @@ class AgencyWalkingDynamic(AgencyWalking):
                                     row = dest['rows'][from_node_i]
                                     cell = row['elements'][0]
                                     to_node = destination
-                                    from_node_name = cls.stop_dict[cls.stops[from_node_i]]
+                                    from_node_name = stops.geo_str_to_name[cls.stops[from_node_i]]
                                     if cell['status'] == 'OK':
                                             key = (from_node_name, to_node)
                                             ##the distance is being sent in text form as that is to be read by humans while the duration is sent
