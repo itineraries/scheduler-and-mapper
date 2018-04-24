@@ -30,7 +30,7 @@ This code is responsible for parsing schedule data and finding itineraries.
    from the TransLoc API. Save it as `NYU_Stops.json`.
 4. Run `match_stops_locations.py`. If it says to check a stop in the overrides
    file, then update `Stop Location Overrides.csv`.
-5. Run `pickle_walking.py`.
+5. Run `pickle_walking_static.py`.
 
 ## Modify schedules (optional)
 NYU publishes its bus schedules as timetables in PDF documents. If you want to
