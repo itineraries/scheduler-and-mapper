@@ -6,8 +6,7 @@ Before running this script, make sure that all stops are in the node list
 and run match_stops_locations.
 '''
 import csv, errno, itertools, json, os, pickle, sys
-from common import STOP_LOCATIONS_CSV, file_in_this_dir
-from common_walking import Point, Edge
+from common import STOP_LOCATIONS_CSV, file_in_this_dir, Point, Edge
 from common_walking_static import WALKING_TIMES_PICKLE
 import bing_maps
 WALKING_DIRECTORY = file_in_this_dir("Walking")
