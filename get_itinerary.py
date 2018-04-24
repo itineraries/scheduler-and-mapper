@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 import argparse, datetime, dateutil.parser, os, pickle, warnings
-from shortestpathfinder import ShortestPathFinder
-from common import NODE_LIST_TXT
 from agency_common import Agency
 from agency_nyu import AgencyNYU
 from agency_walking_static import AgencyWalkingStatic
 from agency_walking_dynamic import AgencyWalkingDynamic
+from itinerary_finder import find_itinerary, ItineraryNotPossible
 from departure_lister import departure_list
 
 def parse_args(agencies=()):
@@ -95,8 +94,6 @@ def parse_args(agencies=()):
     # Return the parsed arguments.
     return args_parsed
 def main():
-    with open(NODE_LIST_TXT, "r", encoding="UTF-8") as f:
-        nodes = [line.strip() for line in f]
     agencies = (
         AgencyNYU,
         AgencyWalkingStatic,
@@ -117,25 +114,30 @@ def main():
     else:
         # The user specified a destination.
         if args_parsed.origin != args_parsed.destination:
-            pathfinder = ShortestPathFinder(nodes, agencies)
-            trip = pathfinder.find_trip(
-                args_parsed.origin,
-                args_parsed.destination,
-                args_parsed.datetime,
-                args_parsed.depart
-            )
-            if trip:
+            try:
+                itinerary = find_itinerary(
+                    agencies,
+                    args_parsed.origin,
+                    args_parsed.destination,
+                    args_parsed.datetime,
+                    args_parsed.depart
+                )
+            except ItineraryNotPossible:
+                print(
+                    "This itinerary is not possible either because there is "
+                    "no continuous path from the origin to the destination or "
+                    "because no agency recognized the origin or destination."
+                )
+            else:
                 print("Itinerary:")
-                for direction in trip:
+                for direction in itinerary:
                     print(" -", direction)
                 print(
                     "Total time:",
-                    trip[-1].datetime_arrive - trip[0].datetime_arrive
+                    itinerary[-1].datetime_arrive - itinerary[0].datetime_arrive
                     if args_parsed.depart else
-                    trip[-1].datetime_depart - trip[0].datetime_depart
+                    itinerary[-1].datetime_depart - itinerary[0].datetime_depart
                 )
-            else:
-                print(pathfinder.error)
         else:
             print("The origin and the destination are the same. That was easy.")
 
