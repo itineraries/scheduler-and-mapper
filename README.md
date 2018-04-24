@@ -2,12 +2,14 @@
 This code is responsible for parsing schedule data and finding itineraries.
 
 ## Install dependencies
-1. Install the following Python libraries: `attrs python-dateutil keyring`
+1. Install the following Python libraries: `attrs python-dateutil keyring requests`
 2. Get a [Bing Maps API key](https://msdn.microsoft.com/library/ff428642.aspx)
    and store it with this command: `keyring set bing_maps default`
-3. Clone [string-match](https://github.com/itineraries/string-match) to `..`,
+3. Get a [Google Maps Distance Matrix API key](https://developers.google.com/maps/documentation/distance-matrix/)
+   and store it with this command: `keyring set google_maps default`
+4. Clone [string-match](https://github.com/itineraries/string-match) to `..`,
    switch to `../string-match`, run `make libmatcher.so`, and switch back here.
-4. Download `tabula-1.0.1-jar-with-dependencies.jar` from
+5. Download `tabula-1.0.1-jar-with-dependencies.jar` from
    [tabula-java](https://github.com/tabulapdf/tabula-java/releases).
 
 ## Build schedules
@@ -32,6 +34,7 @@ This code is responsible for parsing schedule data and finding itineraries.
 4. Run `match_stops_locations.py`. If it says to check a stop in the overrides
    file, then update `Stop Location Overrides.csv`.
 5. Run `pickle_walking_static.py`.
+6. Run `pickle_walking_dynamic.py`.
 
 ## Modify schedules (optional)
 NYU publishes its bus schedules as timetables in PDF documents. If you want to
