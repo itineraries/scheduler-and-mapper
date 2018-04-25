@@ -10,8 +10,10 @@ _max_seconds_unlimited = (
 _max_seconds = _max_seconds_unlimited
 
 def set_max_seconds(value):
+    global _max_seconds
     _max_seconds = value
 def set_max_seconds_unlimited():
+    global _max_seconds
     _max_seconds = _max_seconds_unlimited
 
 class MaxSecondsGet:
@@ -48,11 +50,11 @@ class AgencyWalking(Agency):
             _added_arguments = True
     @staticmethod
     def handle_parsed_arguments(args_parsed, arg_parser_error):
-        global _handled_arguments, _max_seconds
+        global _handled_arguments
         if not _handled_arguments:
             max_seconds = args_parsed.walking_max * 60.0
             if 0.0 <= max_seconds <= _max_seconds_unlimited:
-                _max_seconds = max_seconds
+                set_max_seconds(max_seconds)
             else:
                 arg_parser_error(
                     "--walking-max must be between 0.0 and " +
