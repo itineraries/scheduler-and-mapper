@@ -47,12 +47,15 @@ class AgencyWalking(Agency):
             )
             _added_arguments = True
     @staticmethod
-    def handle_parsed_arguments(args_parsed):
+    def handle_parsed_arguments(args_parsed, arg_parser_error):
         global _handled_arguments, _max_seconds
         if not _handled_arguments:
             max_seconds = args_parsed.walking_max * 60.0
-            if max_seconds <= _max_seconds_unlimited:
+            if 0.0 <= max_seconds <= _max_seconds_unlimited:
                 _max_seconds = max_seconds
             else:
-                print("Warning: --walking-max was changed to", _max_seconds)
+                arg_parser_error(
+                    "--walking-max must be between 0.0 and " +
+                    str(_max_seconds_unlimited / 60.0)
+                )
             _handled_arguments = True

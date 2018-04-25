@@ -23,7 +23,7 @@ class Agency(abc.ABC):
                 argparse.ArgumentParser
         '''
     @classmethod
-    def handle_parsed_arguments(cls, args_parsed):
+    def handle_parsed_arguments(cls, args_parsed, arg_parser_error):
         '''
         Call this function after parsing command line arguments. This function
         will read the parsed arguments and may make changes to class members
@@ -35,6 +35,9 @@ class Agency(abc.ABC):
                 The return value of the parse_args method of the same instance
                 of argparse.ArgumentParser whose add_argument method was passed
                 to add_arguments
+            arg_parser_error:
+                The bound error method of an instance of an
+                argparse.ArgumentParser
         '''
     @classmethod
     def use_origin_destination(cls, origin, destination):

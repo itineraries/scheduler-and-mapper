@@ -90,7 +90,7 @@ def parse_args(agencies=()):
             arg_parser.error("time zones are not supported")
     # Pass the parsed arguments to the agencies.
     for agency in agencies:
-        agency.handle_parsed_arguments(args_parsed)
+        agency.handle_parsed_arguments(args_parsed, arg_parser.error)
     # Return the parsed arguments.
     return args_parsed
 def main():
