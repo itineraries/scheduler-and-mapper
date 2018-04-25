@@ -4,9 +4,15 @@ from agency_common import Agency
 
 _added_arguments = False
 _handled_arguments = False
-_max_seconds = (
+_max_seconds_unlimited = (
     datetime.datetime.max - datetime.datetime.min
 ).total_seconds()
+_max_seconds = _max_seconds_unlimited
+
+def set_max_seconds(value):
+    _max_seconds = value
+def set_max_seconds_unlimited():
+    _max_seconds = _max_seconds_unlimited
 
 class MaxSecondsGet:
     def __get__(self, instance, owner):
@@ -33,7 +39,7 @@ class AgencyWalking(Agency):
             arg_parser_add_argument(
                 "--walking-max",
                 type=float,
-                default=_max_seconds / 60.0,
+                default=_max_seconds_unlimited / 60.0,
                 metavar="minutes",
                 help=
                     "the longest period of time that you are willing to walk "
@@ -45,7 +51,7 @@ class AgencyWalking(Agency):
         global _handled_arguments, _max_seconds
         if not _handled_arguments:
             max_seconds = args_parsed.walking_max * 60.0
-            if max_seconds <= _max_seconds:
+            if max_seconds <= _max_seconds_unlimited:
                 _max_seconds = max_seconds
             else:
                 print("Warning: --walking-max was changed to", _max_seconds)
