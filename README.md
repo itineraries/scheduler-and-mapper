@@ -6,7 +6,9 @@ This code is responsible for parsing schedule data and finding itineraries.
 2. Get a [Bing Maps API key](https://msdn.microsoft.com/library/ff428642.aspx)
    and store it with this command: `keyring set bing_maps default`
 3. Get a [Google Maps Distance Matrix API key](https://developers.google.com/maps/documentation/distance-matrix/)
-   and store it with this command: `keyring set google_maps default`
+   and either store it in an environment variable called
+   `GMAPS_DISTANCE_MATRIX_KEY` or store it with this command:
+   `keyring set google_maps default`
 4. Clone [string-match](https://github.com/itineraries/string-match) to `..`,
    switch to `../string-match`, run `make libmatcher.so`, and switch back here.
 5. Download `tabula-1.0.1-jar-with-dependencies.jar` from

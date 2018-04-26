@@ -1,8 +1,11 @@
-import json, requests, sys, datetime, csv, keyring, pickle
+import datetime, json, keyring, os, pickle, requests
 from agency_walking import AgencyWalking
 import stops
 
-_apikey = keyring.get_password("google_maps", "default")
+try:
+    _apikey = os.environ["GMAPS_DISTANCE_MATRIX_KEY"]
+except KeyError:
+    _apikey = keyring.get_password("google_maps", "default")
 
 ONE_MINUTE = datetime.timedelta(minutes=1)
 
