@@ -1,11 +1,7 @@
 #!/usr/bin/env python3
-import argparse, datetime, dateutil.parser, os, pickle, warnings
-from agency_common import Agency
-from agency_nyu import AgencyNYU
-from agency_walking_static import AgencyWalkingStatic
-from agency_walking_dynamic import AgencyWalkingDynamic
-from itinerary_finder import find_itinerary, ItineraryNotPossible
-from departure_lister import departure_list
+import argparse, datetime, dateutil.parser, warnings
+import agency_common, agency_nyu, agency_walking_static, \
+    agency_walking_dynamic, departure_lister, itinerary_finder
 
 def parse_args(agencies=()):
     arg_parser = argparse.ArgumentParser(
@@ -95,16 +91,16 @@ def parse_args(agencies=()):
     return args_parsed
 def main():
     agencies = (
-        AgencyNYU,
-        AgencyWalkingStatic,
-        AgencyWalkingDynamic,
+        agency_nyu.AgencyNYU,
+        agency_walking_static.AgencyWalkingStatic,
+        agency_walking_dynamic.AgencyWalkingDynamic,
     )
-    assert all(issubclass(a, Agency) for a in agencies)
+    assert all(issubclass(a, agency_common.Agency) for a in agencies)
     args_parsed = parse_args(agencies)
     if args_parsed.list_departures:
         # The user asked for a list of departures from the origin.
         print("Departures:")
-        for direction in departure_list(
+        for direction in departure_lister.departure_list(
             agencies,
             args_parsed.origin,
             args_parsed.datetime,
@@ -115,14 +111,14 @@ def main():
         # The user specified a destination.
         if args_parsed.origin != args_parsed.destination:
             try:
-                itinerary = find_itinerary(
+                itinerary = itinerary_finder.find_itinerary(
                     agencies,
                     args_parsed.origin,
                     args_parsed.destination,
                     args_parsed.datetime,
                     args_parsed.depart
                 )
-            except ItineraryNotPossible:
+            except itinerary_finder.ItineraryNotPossible:
                 print(
                     "This itinerary is not possible either because there is "
                     "no continuous path from the origin to the destination or "
