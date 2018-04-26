@@ -130,10 +130,7 @@ def main():
                     print(" -", direction)
                 print(
                     "Total time:",
-                    itinerary[-1].datetime_arrive -
-                    itinerary[0].datetime_arrive
-                    if args_parsed.depart else
-                    itinerary[-1].datetime_depart -
+                    itinerary[-1].datetime_arrive - 
                     itinerary[0].datetime_depart
                 )
         else:
