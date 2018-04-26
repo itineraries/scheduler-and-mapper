@@ -39,7 +39,7 @@ class PreviousNode:
         default=0,
         validator=attr.validators.instance_of(int)
     )
-@attr.s
+@attr.s(frozen=True)
 class WeightedEdge:
     # The agency that provided this edge
     agency = attr.ib()
@@ -57,7 +57,8 @@ def weighted_edges(
     datetime_trip,
     depart,
     consecutive_agency,
-    extra_nodes=frozenset()
+    extra_nodes=frozenset(),
+    disallowed_edges=()
 ):
     '''
     Generates directed, weighted edges from known_node.
@@ -81,6 +82,10 @@ def weighted_edges(
         extra_nodes:
             a set or frozenset of nodes to consider in addition to the
             nodes that are already in stops.name_to_point.keys()
+        disallowed_edges:
+            a container that supports the membership test operations and that
+            contains instances of WeightedEdge, exact matches of which should
+            not be yielded
     Yields:
         A WeightedEdge object
     '''
@@ -105,14 +110,23 @@ def weighted_edges(
             except StopIteration:
                 pass
             else:
-                yield WeightedEdge(
+                result = WeightedEdge(
                     agency=agency,
                     datetime_depart=e.datetime_depart,
                     datetime_arrive=e.datetime_arrive,
                     human_readable_instruction=e.human_readable_instruction,
                     neighbor_node=node
                 )
-def find_itinerary(agencies, origin, destination, trip_datetime, depart=False):
+                if result not in disallowed_edges:
+                    yield result
+def find_itinerary(
+    agencies,
+    origin,
+    destination,
+    trip_datetime,
+    depart,
+    disallowed_edges=()
+):
     '''
     Finds an itinerary that will take the user from the origin to the
     destination before or after the given time. If there is no path from the
@@ -138,6 +152,10 @@ def find_itinerary(agencies, origin, destination, trip_datetime, depart=False):
         depart:
             If True, the itinerary has the user depart after trip_datetime.
             If False, the itinerary has the user arrive before trip_datetime.
+        disallowed_edges:
+            a container that supports the membership test operations and that
+            contains instances of WeightedEdge, exact matches of which should
+            not be yielded
     Returns:
         The itinerary is returned as a list of Direction objects.
     '''
@@ -184,7 +202,8 @@ def find_itinerary(agencies, origin, destination, trip_datetime, depart=False):
                 previous_node[current_node].departure_time,
                 depart,
                 previous_node[current_node].agency,
-                extra_nodes
+                extra_nodes,
+                disallowed_edges
             ):
                 num_stops_to_node_new = previous_node[
                     current_node
