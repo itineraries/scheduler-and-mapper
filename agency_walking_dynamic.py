@@ -1,5 +1,6 @@
 import datetime, json, keyring, os, pickle, requests
 from agency_walking import AgencyWalking
+from common import Weight
 import stops
 
 try:
@@ -114,7 +115,7 @@ class AgencyWalkingDynamic(AgencyWalking):
                                                 if datetime_arrive > datetime.datetime.min + travel_duration: ##the arrival time isn't impossible
                                                         datetime_depart = datetime_arrive - travel_duration
                                                         while True:
-                                                                yield cls.Weight(
+                                                                yield Weight(
                                                                     datetime_depart,
                                                                     datetime_arrive,
                                                                     human_readable_instruction="Walk " + distance + " to " + address + "."
@@ -132,7 +133,7 @@ class AgencyWalkingDynamic(AgencyWalking):
                                                     datetime.datetime.min + travel_duration:
                                                     datetime_arrive = datetime_depart + travel_duration
                                                     while True:
-                                                        yield cls.Weight(
+                                                        yield Weight(
                                                             datetime_depart,
                                                             datetime_arrive,
                                                             human_readable_instruction="Walk " + distance + " to " + address + "."

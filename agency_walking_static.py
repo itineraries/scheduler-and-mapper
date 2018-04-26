@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import datetime, pickle
 from agency_walking import AgencyWalking
+from common import Weight
 from common_walking_static import WALKING_TIMES_PICKLE
 
 ONE_MINUTE = datetime.timedelta(minutes=1)
@@ -38,7 +39,7 @@ class AgencyWalkingStatic(AgencyWalking):
                             travel_duration:
                             datetime_depart = datetime_arrive - travel_duration
                             while True:
-                                yield cls.Weight(
+                                yield Weight(
                                     datetime_depart,
                                     datetime_arrive,
                                     human_readable_instruction="Walk."
@@ -57,7 +58,7 @@ class AgencyWalkingStatic(AgencyWalking):
                             datetime.datetime.min + travel_duration:
                             datetime_arrive = datetime_depart + travel_duration
                             while True:
-                                yield cls.Weight(
+                                yield Weight(
                                     datetime_depart,
                                     datetime_arrive,
                                     human_readable_instruction="Walk."

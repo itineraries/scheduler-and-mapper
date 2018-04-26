@@ -4,24 +4,14 @@ This module implements a uniform cost search.
 '''
 import attr, collections, datetime, heapq, pickle
 import stops
-from agency_common import Agency, Direction
+from agency_common import Agency
+from common import WeightedEdge
 
 class ItineraryNotPossible(Exception):
     '''
     This exception is raised when find_itinerary is unable to find an itinerary
     with the given arguments.
     '''
-@attr.s(frozen=True)
-class WeightedEdge(Agency.Weight):
-    # The agency that provided this edge
-    agency = attr.ib(
-        default=None,
-        validator=attr.validators.optional(
-            lambda self, attribute, value: issubclass(value, Agency)
-        )
-    )
-    # The node to which this edge connects
-    neighbor_node = attr.ib(default=None)
 @attr.s
 class PreviousNode:
     edge = attr.ib(
@@ -96,7 +86,8 @@ def weighted_edges(
                     datetime_depart=e.datetime_depart,
                     datetime_arrive=e.datetime_arrive,
                     human_readable_instruction=e.human_readable_instruction,
-                    neighbor_node=node
+                    from_node=node if depart else known_node,
+                    to_node=known_node if depart else node
                 )
                 if result not in disallowed_edges:
                     yield result
@@ -191,10 +182,11 @@ def find_itinerary(
                 extra_nodes,
                 disallowed_edges
             ):
+                neighbor_node = e.from_node if depart else e.to_node
                 num_stops_to_node_new = previous_node[
                     current_node
                 ].num_stops_to_node + 1
-                n = previous_node[e.neighbor_node]
+                n = previous_node[neighbor_node]
                 if depart:
                     neighbor_distance_old = (
                         n.edge.datetime_arrive,
@@ -218,20 +210,22 @@ def find_itinerary(
                         e.datetime_arrive
                     )
                 if neighbor_distance_new < neighbor_distance_old:
-                    previous_node[e.neighbor_node] = PreviousNode(
+                    previous_node[neighbor_node] = PreviousNode(
                         WeightedEdge(
                             agency=e.agency,
                             datetime_arrive=e.datetime_arrive,
                             datetime_depart=e.datetime_depart,
                             human_readable_instruction=
                                 e.human_readable_instruction,
-                            neighbor_node=current_node,
+                            from_node=
+                                current_node if depart else neighbor_node,
+                            to_node=neighbor_node if depart else current_node
                         ),
                         num_stops_to_node=num_stops_to_node_new
                     )
                     heapq.heappush(
                         visit_queue,
-                        neighbor_distance_new + (e.neighbor_node,)
+                        neighbor_distance_new + (neighbor_node,)
                     )
             # If the target node has been visited, then break.
             if current_node == stop_algorithm:
@@ -241,9 +235,11 @@ def find_itinerary(
     # distance among the nodes in the unvisited set is infinity (when
     # planning a complete traversal; occurs when there is no connection
     # between the initial node and remaining unvisited nodes), then stop.
-    if previous_node[
-        destination if depart else origin
-    ].edge.neighbor_node is None:
+    if (
+        previous_node[destination].edge.from_node
+        if depart else
+        previous_node[origin].edge.to_node
+    ) is None:
         raise ItineraryNotPossible
         return None
     # Prune away the departure from the destination.
@@ -254,33 +250,15 @@ def find_itinerary(
         current_node = destination
         while current_node is not None:
             n = previous_node[current_node]
-            itinerary.append(
-                Direction(
-                    from_node=n.edge.neighbor_node,
-                    datetime_depart=n.edge.datetime_depart,
-                    human_readable_instruction=
-                        n.edge.human_readable_instruction,
-                    to_node=current_node,
-                    datetime_arrive=n.edge.datetime_arrive
-                )
-            )
-            current_node = n.edge.neighbor_node
+            itinerary.append(n.edge)
+            current_node = n.edge.from_node
         itinerary = itinerary[-2::-1]
     else:
         current_node = origin
         while current_node is not None:
             n = previous_node[current_node]
-            itinerary.append(
-                Direction(
-                    from_node=current_node,
-                    datetime_depart=n.edge.datetime_depart,
-                    human_readable_instruction=
-                        n.edge.human_readable_instruction,
-                    to_node=n.edge.neighbor_node,
-                    datetime_arrive=n.edge.datetime_arrive
-                )
-            )
-            current_node = n.edge.neighbor_node
+            itinerary.append(n.edge)
+            current_node = n.edge.to_node
         itinerary.pop()
     # We are done.
     return itinerary

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-import attr, base64, os.path, struct
+import attr, base64, datetime, os.path, struct
+from agency_common import Agency
 
 def file_in_this_dir(name):
     return os.path.join(os.path.dirname(__file__), name)
@@ -67,3 +68,57 @@ class LineSegment:
             "{},{}".format(self.point_A.lat, self.point_A.lng),
             "{},{}".format(self.point_B.lat, self.point_B.lng)
         )
+@attr.s
+class Weight:
+    # The datetime when the user leaves a node
+    datetime_depart = attr.ib(
+        default=datetime.datetime.min,
+        validator=attr.validators.optional(
+            attr.validators.instance_of(datetime.datetime)
+        )
+    )
+    # The datetime when the user arrives at another node
+    datetime_arrive = attr.ib(
+        default=datetime.datetime.max,
+        validator=attr.validators.optional(
+            attr.validators.instance_of(datetime.datetime)
+        )
+    )
+    # A string of a human-readable instruction
+    human_readable_instruction = attr.ib(
+        default=None,
+        converter=attr.converters.optional(str)
+    )
+@attr.s(frozen=True)
+class WeightedEdge(Weight):
+    '''
+    This class represents one instruction to the user within an itinerary.
+    '''
+    TIME_STRING = "at %I:%M %p on %A."
+    agency = attr.ib(
+        default=None,
+        validator=attr.validators.optional(
+            lambda self, attribute, value: issubclass(value, Agency)
+        )
+    )
+    from_node = attr.ib(
+        default=None,
+        converter=attr.converters.optional(str)
+    )
+    to_node = attr.ib(
+        default=None,
+        converter=attr.converters.optional(str)
+    )
+    def __str__(self):
+        result = []
+        if self.datetime_depart is not None:
+            result.append("Depart from")
+            result.append(self.from_node)
+            result.append(self.datetime_depart.strftime(self.TIME_STRING))
+        if self.human_readable_instruction is not None:
+            result.append(self.human_readable_instruction)
+        if self.datetime_arrive is not None:
+            result.append("Arrive at")
+            result.append(self.to_node)
+            result.append(self.datetime_arrive.strftime(self.TIME_STRING))
+        return " ".join(result)

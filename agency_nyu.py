@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import collections, datetime, heapq, itertools, pickle
-from agency_common import Agency, Direction
+from agency_common import Agency
+from common import Weight, WeightedEdge
 from common_nyu import NYU_PICKLE
 JUST_BEFORE_MIDNIGHT = datetime.timedelta(microseconds=-1)
 MIDNIGHT = datetime.time()
@@ -190,7 +191,7 @@ class AgencyNYU(Agency):
                                         datetime.datetime.max - d
                                         if backwards else
                                         a - datetime.datetime.min,
-                                        cls.Weight(
+                                        Weight(
                                             d,
                                             a,
                                             "Take Route " +
@@ -318,7 +319,7 @@ class AgencyNYU(Agency):
                                     edges_heap,
                                     EdgeHeapQKey(
                                         a - datetime.datetime.min,
-                                        Direction(
+                                        WeightedEdge(
                                             datetime_depart=d,
                                             datetime_arrive=a,
                                             human_readable_instruction=(
