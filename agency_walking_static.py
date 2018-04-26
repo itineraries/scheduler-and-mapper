@@ -38,7 +38,7 @@ class AgencyWalkingStatic(AgencyWalking):
                             travel_duration:
                             datetime_depart = datetime_arrive - travel_duration
                             while True:
-                                yield cls.UnweightedEdge(
+                                yield cls.Weight(
                                     datetime_depart,
                                     datetime_arrive,
                                     human_readable_instruction="Walk."
@@ -57,7 +57,7 @@ class AgencyWalkingStatic(AgencyWalking):
                             datetime.datetime.min + travel_duration:
                             datetime_arrive = datetime_depart + travel_duration
                             while True:
-                                yield cls.UnweightedEdge(
+                                yield cls.Weight(
                                     datetime_depart,
                                     datetime_arrive,
                                     human_readable_instruction="Walk."

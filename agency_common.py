@@ -3,13 +3,26 @@ import abc, attr, datetime
 
 class Agency(abc.ABC):
     @attr.s
-    class UnweightedEdge:
-        # datetime of departure from from_node
-        datetime_depart = attr.ib()
-        # datetime of arrival at to_node
-        datetime_arrive = attr.ib()
+    class Weight:
+        # The datetime when the user leaves a node
+        datetime_depart = attr.ib(
+            default=datetime.datetime.min,
+            validator=attr.validators.optional(
+                attr.validators.instance_of(datetime.datetime)
+            )
+        )
+        # The datetime when the user arrives at another node
+        datetime_arrive = attr.ib(
+            default=datetime.datetime.max,
+            validator=attr.validators.optional(
+                attr.validators.instance_of(datetime.datetime)
+            )
+        )
         # A string of a human-readable instruction
-        human_readable_instruction = attr.ib()
+        human_readable_instruction = attr.ib(
+            default=None,
+            converter=attr.converters.optional(str)
+        )
     @classmethod
     def add_arguments(cls, arg_parser_add_argument):
         '''
@@ -86,7 +99,7 @@ class Agency(abc.ABC):
                 the agency that provided the edge leading to from_node if
                 depart is True or to_node otherwise
         Yields:
-            An UnweightedEdge object
+            A Weight object
         '''
         raise NotImplementedError
     @classmethod
@@ -105,13 +118,13 @@ class Agency(abc.ABC):
         return
         yield
 @attr.s
-class Direction(Agency.UnweightedEdge):
+class Direction(Agency.Weight):
     '''
     This class represents one instruction to the user within an itinerary.
     '''
     TIME_STRING = "at %I:%M %p on %A."
-    from_node = attr.ib()
-    to_node = attr.ib()
+    from_node = attr.ib(default=None)
+    to_node = attr.ib(default=None)
     def __str__(self):
         result = []
         if self.datetime_depart is not None:

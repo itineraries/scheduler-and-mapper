@@ -190,7 +190,7 @@ class AgencyNYU(Agency):
                                         datetime.datetime.max - d
                                         if backwards else
                                         a - datetime.datetime.min,
-                                        cls.UnweightedEdge(
+                                        cls.Weight(
                                             d,
                                             a,
                                             "Take Route " +
