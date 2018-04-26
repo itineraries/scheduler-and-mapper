@@ -12,45 +12,29 @@ class ItineraryNotPossible(Exception):
     with the given arguments.
     '''
 @attr.s
-class PreviousNode:
+class PreviousNode(Agency.Weight):
     agency = attr.ib(
         default=None,
         validator=attr.validators.optional(
             lambda self, attribute, value: issubclass(value, Agency)
         )
     )
-    arrival_time = attr.ib(
-        default=datetime.datetime.max,
-        validator=attr.validators.instance_of(datetime.datetime)
-    )
-    departure_time = attr.ib(
-        default=datetime.datetime.min,
-        validator=attr.validators.instance_of(datetime.datetime)
-    )
-    human_readable_instruction = attr.ib(
-        default=None,
-        converter=attr.converters.optional(str)
-    )
-    name = attr.ib(
-        default=None,
-        converter=attr.converters.optional(str)
-    )
+    name = attr.ib(default=None)
     num_stops_to_node = attr.ib(
         default=0,
         validator=attr.validators.instance_of(int)
     )
 @attr.s(frozen=True)
-class WeightedEdge:
+class WeightedEdge(Agency.Weight):
     # The agency that provided this edge
-    agency = attr.ib()
-    # The datetime at which the user departs before this edge
-    datetime_depart = attr.ib()
-    # The datetime at which the user arrives after this edge
-    datetime_arrive = attr.ib()
-    # A human-readable instruction to follow
-    human_readable_instruction = attr.ib()
+    agency = attr.ib(
+        default=None,
+        validator=attr.validators.optional(
+            lambda self, attribute, value: issubclass(value, Agency)
+        )
+    )
     # The node to which this edge connects
-    neighbor_node = attr.ib()
+    neighbor_node = attr.ib(default=None)
 def weighted_edges(
     agencies,
     known_node,
@@ -169,14 +153,14 @@ def find_itinerary(
     previous_node = collections.defaultdict(PreviousNode)
     # Set the initial node as current. Mark all other nodes unvisited.
     if depart:
-        previous_node[origin].arrival_time = trip_datetime
+        previous_node[origin].datetime_arrive = trip_datetime
         heapq.heappush(
             visit_queue,
             (datetime.datetime.min, datetime.timedelta(0), 0, origin)
         )
         stop_algorithm = destination
     else:
-        previous_node[destination].departure_time = trip_datetime
+        previous_node[destination].datetime_depart = trip_datetime
         heapq.heappush(
             visit_queue,
             (datetime.timedelta(0), datetime.datetime.min, 0, destination)
@@ -197,9 +181,9 @@ def find_itinerary(
             for e in weighted_edges(
                 agencies,
                 current_node,
-                previous_node[current_node].arrival_time
+                previous_node[current_node].datetime_arrive
                 if depart else
-                previous_node[current_node].departure_time,
+                previous_node[current_node].datetime_depart,
                 depart,
                 previous_node[current_node].agency,
                 extra_nodes,
@@ -211,9 +195,9 @@ def find_itinerary(
                 n = previous_node[e.neighbor_node]
                 if depart:
                     neighbor_distance_old = (
-                        n.arrival_time,
+                        n.datetime_arrive,
                         n.num_stops_to_node,
-                        datetime.datetime.max - n.departure_time
+                        datetime.datetime.max - n.datetime_depart
                     )
                     neighbor_distance_new = (
                         e.datetime_arrive,
@@ -222,9 +206,9 @@ def find_itinerary(
                     )
                 else:
                     neighbor_distance_old = (
-                        datetime.datetime.max - n.departure_time,
+                        datetime.datetime.max - n.datetime_depart,
                         n.num_stops_to_node,
-                        n.arrival_time
+                        n.datetime_arrive
                     )
                     neighbor_distance_new = (
                         datetime.datetime.max - e.datetime_depart,
@@ -234,8 +218,8 @@ def find_itinerary(
                 if neighbor_distance_new < neighbor_distance_old:
                     previous_node[e.neighbor_node] = PreviousNode(
                         agency=e.agency,
-                        arrival_time=e.datetime_arrive,
-                        departure_time=e.datetime_depart,
+                        datetime_arrive=e.datetime_arrive,
+                        datetime_depart=e.datetime_depart,
                         human_readable_instruction=
                             e.human_readable_instruction,
                         name=current_node,
@@ -262,32 +246,32 @@ def find_itinerary(
     itinerary = []
     if depart:
         current_node = destination
-        previous_node[origin].departure_time = None
+        previous_node[origin].datetime_depart = None
         while current_node is not None:
             n = previous_node[current_node]
             itinerary.append(
                 Direction(
                     from_node=n.name,
-                    datetime_depart=n.departure_time,
+                    datetime_depart=n.datetime_depart,
                     human_readable_instruction=n.human_readable_instruction,
                     to_node=current_node,
-                    datetime_arrive=n.arrival_time
+                    datetime_arrive=n.datetime_arrive
                 )
             )
             current_node = n.name
         itinerary = itinerary[::-1]
     else:
         current_node = origin
-        previous_node[destination].arrival_time = None
+        previous_node[destination].datetime_arrive = None
         while current_node is not None:
             n = previous_node[current_node]
             itinerary.append(
                 Direction(
                     from_node=current_node,
-                    datetime_depart=n.departure_time,
+                    datetime_depart=n.datetime_depart,
                     human_readable_instruction=n.human_readable_instruction,
                     to_node=n.name,
-                    datetime_arrive=n.arrival_time
+                    datetime_arrive=n.datetime_arrive
                 )
             )
             current_node = n.name
