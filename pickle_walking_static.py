@@ -6,33 +6,33 @@ Before running this script, make sure that all stops are in the node list
 and run match_stops_locations.
 '''
 import errno, itertools, json, os, pickle, sys
-from common import file_in_this_dir, Edge
+from common import file_in_this_dir, LineSegment
 from common_walking_static import WALKING_TIMES_PICKLE
 import bing_maps, stops
 WALKING_DIRECTORY = file_in_this_dir("Walking")
 
-def walking_directions_filename(edge):
+def walking_directions_filename(line):
     # Round to the nearest 0.00001, which is a
     # little more than a meter at the equator.
     return os.path.join(
         WALKING_DIRECTORY,
-        "Walking_Directions_" + edge.to_filename_friendly(
+        "Walking_Directions_" + line.to_filename_friendly(
             precision=5
         ) + ".json"
     )
-def all_edges():
+def all_lines():
     '''
-    Takes stops.name_to_point and yields a (name, name, Edge, filename) tuple
-    from every location to every other location. The filename refers to the
-    name of the file in which the API response should be cached.
+    Takes stops.name_to_point and yields a (name, name, LineSegment, filename)
+    tuple from every location to every other location. The filename refers to
+    the name of the file in which the API response should be cached.
     '''
     for (from_name, from_node), (to_name, to_node) in itertools.permutations(
         stops.name_to_point.items(),
         2
     ):
-        edge = Edge(from_node, to_node)
-        filename = walking_directions_filename(edge)
-        yield from_name, to_name, edge, filename
+        line = LineSegment(from_node, to_node)
+        filename = walking_directions_filename(line)
+        yield from_name, to_name, line, filename
 def main():
     # Create WALKING_DIRECTORY if it does not exist.
     try:
@@ -43,7 +43,7 @@ def main():
     # Figure out which walking directions are missing.
     walking_times = {}
     try:
-        for from_name, to_name, edge, filename in all_edges():
+        for from_name, to_name, line, filename in all_lines():
             # Get walking directions.
             try:
                 # If the walking directions are cached, read them from cache.
@@ -52,7 +52,7 @@ def main():
             except FileNotFoundError:
                 # The walking directions were not cached. Get them from Bing.
                 d = bing_maps.get_route(
-                    edge.to_pair_of_str(),
+                    line.to_pair_of_str(),
                     travel_mode=bing_maps.TRAVEL_MODE_WALKING,
                     decode_json=False
                 )

@@ -14,32 +14,32 @@ class Point:
     def __str__(self):
         return "{},{}".format(self.lat, self.lng)
 @attr.s
-class Edge:
-    from_node = attr.ib(validator=attr.validators.instance_of(Point))
-    to_node = attr.ib(validator=attr.validators.instance_of(Point))
+class LineSegment:
+    point_A = attr.ib(validator=attr.validators.instance_of(Point))
+    point_B = attr.ib(validator=attr.validators.instance_of(Point))
     FilenameFriendlyStructFormat = "hffff"
     def to_filename_friendly(self, lowercase=True, precision=-1):
         '''
-        Returns a case-insensitive string that represents this Edge.
-        If precision is not negative, then the coordinates will be
-        rounded to that many decimal places. The precision must be
-        representable as a C short.
+        Returns a case-insensitive string that represents this LineSegment.
+        If precision is not negative, then the coordinates will be rounded to
+        that many decimal places. The precision must be representable as a C
+        short.
         '''
         s = base64.b32encode(
             struct.pack(
                 self.FilenameFriendlyStructFormat,
                 precision,
-                self.from_node.lat,
-                self.from_node.lng,
-                self.to_node.lat,
-                self.to_node.lng
+                self.point_A.lat,
+                self.point_A.lng,
+                self.point_B.lat,
+                self.point_B.lng
             ) if precision < 0 else struct.pack(
                 self.FilenameFriendlyStructFormat,
                 precision,
-                round(self.from_node.lat, precision),
-                round(self.from_node.lng, precision),
-                round(self.to_node.lat, precision),
-                round(self.to_node.lng, precision),
+                round(self.point_A.lat, precision),
+                round(self.point_A.lng, precision),
+                round(self.point_B.lat, precision),
+                round(self.point_B.lng, precision),
             )
         ).decode("ASCII").rstrip('=')
         if lowercase:
@@ -48,7 +48,7 @@ class Edge:
     @classmethod
     def from_filename_friendly(cls, filename):
         '''
-        Returns an Edge from a string from to_filename_friendly().
+        Returns a LineSegment from a string from to_filename_friendly().
         '''
         precision, from_lat, from_lng, to_lat, to_lng = struct.unpack(
             cls.FilenameFriendlyStructFormat,
@@ -64,6 +64,6 @@ class Edge:
         return cls(Point(from_lat, from_lng), Point(to_lat, to_lng))
     def to_pair_of_str(self):
         return (
-            "{},{}".format(self.from_node.lat, self.from_node.lng),
-            "{},{}".format(self.to_node.lat, self.to_node.lng)
+            "{},{}".format(self.point_A.lat, self.point_A.lng),
+            "{},{}".format(self.point_B.lat, self.point_B.lng)
         )
