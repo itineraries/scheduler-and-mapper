@@ -58,7 +58,7 @@ def weighted_edges(
     for node in (stops.name_to_point.keys() | extra_nodes) - {known_node}:
         for agency in agencies:
             try:
-                e = next(
+                weight = next(
                     # depart = True: Only process edges from known_node.
                     # depart = False: Only process edges to known_node.
                     agency.get_edge(
@@ -76,15 +76,15 @@ def weighted_edges(
             except StopIteration:
                 pass
             else:
-                result = WeightedEdge(
+                edge = WeightedEdge(
                     agency=agency,
-                    datetime_depart=e.datetime_depart,
-                    datetime_arrive=e.datetime_arrive,
-                    human_readable_instruction=e.human_readable_instruction,
+                    datetime_depart=weight.datetime_depart,
+                    datetime_arrive=weight.datetime_arrive,
+                    human_readable_instruction=weight.human_readable_instruction,
                     from_node=node if depart else known_node,
                     to_node=known_node if depart else node
                 )
-                yield result
+                yield edge
 def find_itinerary(
     agencies,
     origin,
@@ -162,17 +162,18 @@ def find_itinerary(
             # A visited node will never be checked again.
             visited.add(current_node)
             # For the current node, consider all of its unvisited neighbors.
-            for e in weighted_edges(
+            previous_node_current_node_edge = previous_node[current_node].edge
+            for edge in weighted_edges(
                 agencies,
                 current_node,
-                previous_node[current_node].edge.datetime_arrive
+                previous_node_current_node_edge.datetime_arrive
                 if depart else
-                previous_node[current_node].edge.datetime_depart,
+                previous_node_current_node_edge.datetime_depart,
                 depart,
-                previous_node[current_node].edge.agency,
+                previous_node_current_node_edge.agency,
                 extra_nodes
             ):
-                neighbor_node = e.from_node if depart else e.to_node
+                neighbor_node = edge.from_node if depart else edge.to_node
                 num_stops_to_node_new = previous_node[
                     current_node
                 ].num_stops_to_node + 1
@@ -185,9 +186,9 @@ def find_itinerary(
                         datetime.datetime.max - n.edge.datetime_depart
                     )
                     neighbor_distance_new = (
-                        e.datetime_arrive,
+                        edge.datetime_arrive,
                         num_stops_to_node_new,
-                        datetime.datetime.max - e.datetime_depart
+                        datetime.datetime.max - edge.datetime_depart
                     )
                 else:
                     neighbor_distance_old = (
@@ -196,26 +197,26 @@ def find_itinerary(
                         n.edge.datetime_arrive
                     )
                     neighbor_distance_new = (
-                        datetime.datetime.max - e.datetime_depart,
+                        datetime.datetime.max - edge.datetime_depart,
                         num_stops_to_node_new,
-                        e.datetime_arrive
+                        edge.datetime_arrive
                     )
                 # Compare the newly calculated tentative distance to the
                 # currently assigned value and assign the smaller one.
                 if neighbor_distance_new < neighbor_distance_old:
-                    edge = WeightedEdge(
-                        agency=e.agency,
-                        datetime_arrive=e.datetime_arrive,
-                        datetime_depart=e.datetime_depart,
+                    direction = WeightedEdge(
+                        agency=edge.agency,
+                        datetime_arrive=edge.datetime_arrive,
+                        datetime_depart=edge.datetime_depart,
                         human_readable_instruction=
-                            e.human_readable_instruction,
+                            edge.human_readable_instruction,
                         from_node=
-                            current_node if depart else e.to_node,
-                        to_node=e.from_node if depart else current_node
+                            current_node if depart else edge.to_node,
+                        to_node=edge.from_node if depart else current_node
                     )
-                    if edge not in disallowed_edges:
+                    if direction not in disallowed_edges:
                         previous_node[neighbor_node] = PreviousNode(
-                            edge,
+                            direction,
                             num_stops_to_node=num_stops_to_node_new
                         )
                         heapq.heappush(
@@ -315,7 +316,7 @@ def find_itineraries(
         yield itinerary
     # Find edges whose agencies are in agencies_to_vary.
     edges_to_disallow = {
-        e for e in itinerary if e.agency in agencies_to_vary
+        edge for edge in itinerary if edge.agency in agencies_to_vary
     }
     # Recursively find more itineraries with different combinations of
     # disallowed edges.
