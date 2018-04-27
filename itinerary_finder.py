@@ -2,7 +2,7 @@
 '''
 This module implements a uniform cost search.
 '''
-import attr, collections, datetime, heapq, pickle
+import attr, collections, datetime, heapq, itertools
 import stops
 from agency_common import Agency
 from common import WeightedEdge
@@ -257,3 +257,85 @@ def find_itinerary(
         itinerary.pop()
     # We are done.
     return itinerary
+def find_itineraries(
+    agencies_to_vary,
+    *args,
+    max_count=None,
+    disallowed_edges=None,
+    **kwargs
+):
+    '''
+    Finds multiple itineraries instead of just one. This is a generator; the
+    itineraries are yielded. Each itinerary has one or more different edges
+    than the others. The agency of every varied edge will be in
+    agencies_to_vary. A maximum of max_count itineraries will be yielded.
+    
+    Arguments:
+        agencies_to_vary:
+            A container that supports membership test operations and that
+            contains subclasses of Agency. The yielded itineraries will differ
+            in edges whose agencies are in this container. Some or all agencies
+            will make a difference.
+        max_count:
+            An integer or None. No more than this number of itineraries will be
+            yielded. If this argument is None, then there will be no limit.
+        disallowed_edges:
+            A set or frozenset that contains instances of WeightedEdge, exact
+            matches of which will not be in any of the yielded itineraries
+        *args and **kwargs:
+            All other arguments will be forwarded to find_itinerary.
+    '''
+    # Handle the maximum number of itineraries here while handling the rest of
+    # the computations in a recursive call.
+    if max_count is not None:
+        for itinerary in find_itineraries(
+            agencies_to_vary,
+            *args,
+            max_count=None,
+            disallowed_edges=disallowed_edges,
+            **kwargs
+        ):
+            # We could use itertools.islice, but this is simpler.
+            max_count -= 1
+            if max_count < 0:
+                return
+            yield itinerary
+    # Find an itinerary normally.
+    if disallowed_edges is None:
+        disallowed_edges = frozenset()
+    try:
+        itinerary = find_itinerary(
+            *args,
+            disallowed_edges=disallowed_edges,
+            **kwargs
+        )
+    except ItineraryNotPossible:
+        return
+    else:
+        yield itinerary
+    # Find edges whose agencies are in agencies_to_vary.
+    edges_to_disallow = {
+        e for e in itinerary if e.agency in agencies_to_vary
+    }
+    # Recursively find more itineraries with different combinations of
+    # disallowed edges.
+    generators = collections.deque()
+    for i in range(1, len(edges_to_disallow) + 1):
+        for de_combo in itertools.combinations(edges_to_disallow, i):
+            generators.append(
+                find_itineraries(
+                    agencies_to_vary,
+                    *args,
+                    max_count=None,
+                    disallowed_edges=disallowed_edges.union(de_combo),
+                    **kwargs
+                )
+            )
+    # Yield itineraries from the generators, breadth-first.
+    while generators:
+        for generator in generators:
+            try:
+                yield next(generator)
+            except StopIteration:
+                generators.remove(generator)
+                break
