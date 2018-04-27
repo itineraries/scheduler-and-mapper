@@ -28,8 +28,7 @@ def weighted_edges(
     datetime_trip,
     depart,
     consecutive_agency,
-    extra_nodes=frozenset(),
-    disallowed_edges=()
+    extra_nodes=frozenset()
 ):
     '''
     Generates directed, weighted edges from known_node.
@@ -53,10 +52,6 @@ def weighted_edges(
         extra_nodes:
             a set or frozenset of nodes to consider in addition to the
             nodes that are already in stops.neighbor_node_to_point.keys()
-        disallowed_edges:
-            a container that supports the membership test operations and that
-            contains instances of WeightedEdge, exact matches of which should
-            not be yielded
     Yields:
         A WeightedEdge object
     '''
@@ -89,8 +84,7 @@ def weighted_edges(
                     from_node=node if depart else known_node,
                     to_node=known_node if depart else node
                 )
-                if result not in disallowed_edges:
-                    yield result
+                yield result
 def find_itinerary(
     agencies,
     origin,
@@ -179,8 +173,7 @@ def find_itinerary(
                 previous_node[current_node].edge.datetime_depart,
                 depart,
                 previous_node[current_node].edge.agency,
-                extra_nodes,
-                disallowed_edges
+                extra_nodes
             ):
                 neighbor_node = e.from_node if depart else e.to_node
                 num_stops_to_node_new = previous_node[
@@ -210,23 +203,25 @@ def find_itinerary(
                         e.datetime_arrive
                     )
                 if neighbor_distance_new < neighbor_distance_old:
-                    previous_node[neighbor_node] = PreviousNode(
-                        WeightedEdge(
-                            agency=e.agency,
-                            datetime_arrive=e.datetime_arrive,
-                            datetime_depart=e.datetime_depart,
-                            human_readable_instruction=
-                                e.human_readable_instruction,
-                            from_node=
-                                current_node if depart else neighbor_node,
-                            to_node=neighbor_node if depart else current_node
-                        ),
-                        num_stops_to_node=num_stops_to_node_new
+                    edge = WeightedEdge(
+                        agency=e.agency,
+                        datetime_arrive=e.datetime_arrive,
+                        datetime_depart=e.datetime_depart,
+                        human_readable_instruction=
+                            e.human_readable_instruction,
+                        from_node=
+                            current_node if depart else e.to_node,
+                        to_node=e.from_node if depart else current_node
                     )
-                    heapq.heappush(
-                        visit_queue,
-                        neighbor_distance_new + (neighbor_node,)
-                    )
+                    if edge not in disallowed_edges:
+                        previous_node[neighbor_node] = PreviousNode(
+                            edge,
+                            num_stops_to_node=num_stops_to_node_new
+                        )
+                        heapq.heappush(
+                            visit_queue,
+                            neighbor_distance_new + (neighbor_node,)
+                        )
             # If the target node has been visited, then break.
             if current_node == stop_algorithm:
                 break
