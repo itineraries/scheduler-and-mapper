@@ -161,10 +161,7 @@ def find_itinerary(
             # Mark the current node as visited.
             # A visited node will never be checked again.
             visited.add(current_node)
-            # For the current node, consider all of its unvisited neighbors
-            # and calculate their tentative distances. Compare the newly
-            # calculated tentative distance to the currently assigned value
-            # and assign the smaller one.
+            # For the current node, consider all of its unvisited neighbors.
             for e in weighted_edges(
                 agencies,
                 current_node,
@@ -180,6 +177,7 @@ def find_itinerary(
                     current_node
                 ].num_stops_to_node + 1
                 n = previous_node[neighbor_node]
+                # Calculate the unvisited neighbor's tentative distance.
                 if depart:
                     neighbor_distance_old = (
                         n.edge.datetime_arrive,
@@ -202,6 +200,8 @@ def find_itinerary(
                         num_stops_to_node_new,
                         e.datetime_arrive
                     )
+                # Compare the newly calculated tentative distance to the
+                # currently assigned value and assign the smaller one.
                 if neighbor_distance_new < neighbor_distance_old:
                     edge = WeightedEdge(
                         agency=e.agency,
