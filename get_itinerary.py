@@ -49,6 +49,16 @@ def parse_args(agencies=()):
             "destination, the next N departures from the origin after "
             "datetime are returned"
     )
+    arg_parser.add_argument(
+        "-n",
+        "--number-of-itineraries",
+        type=int,
+        default=0,
+        metavar="N",
+        help=
+            "causes N different itineraries to be printed instead of just the "
+            "one that is the most optimal"
+    )
     # Allow agencies to add their own arguments.
     for agency in agencies:
         agency.add_arguments(arg_parser.add_argument)
@@ -66,6 +76,15 @@ def parse_args(agencies=()):
         arg_parser.error(
             "either the destination or --list-departures is required"
         )
+    # Check that --list-departures and --number-of-itineraries are not both
+    # set.
+    if args_parsed.list_departures and args_parsed.number_of_itineraries:
+        arg_parser.error(
+            "--list-departures cannot be used with --number-of-itineraries"
+        )
+    # Check that --number-of-itineraries is at least 1 or that it is 0.
+    if args_parsed.number_of_itineraries < 0:
+        arg_parser.error("--number-of-itineraries must be 1 or more")
     # Convert the datetime argument to a datetime.
     if args_parsed.datetime.lower() == "now":
         args_parsed.datetime = datetime.datetime.now()
@@ -95,6 +114,9 @@ def main():
         agency_walking_static.AgencyWalkingStatic,
         agency_walking_dynamic.AgencyWalkingDynamic,
     )
+    agencies_to_vary = (
+        agency_nyu.AgencyNYU,
+    )
     assert all(issubclass(a, agency_common.Agency) for a in agencies)
     args_parsed = parse_args(agencies)
     if args_parsed.list_departures:
@@ -107,9 +129,33 @@ def main():
             args_parsed.list_departures
         ):
             print(" -", direction)
-    else:
+    elif args_parsed.origin != args_parsed.destination:
         # The user specified a destination.
-        if args_parsed.origin != args_parsed.destination:
+        if args_parsed.number_of_itineraries:
+            # The user wants multiple itineraries.
+            print("Itineraries:")
+            for i, itinerary in enumerate(
+                itinerary_finder.find_itineraries(
+                    agencies_to_vary,
+                    agencies,
+                    args_parsed.origin,
+                    args_parsed.destination,
+                    args_parsed.datetime,
+                    args_parsed.depart,
+                    max_count=args_parsed.number_of_itineraries
+                ),
+                start=1
+            ):
+                print(" - Itinerary #{}:".format(i))
+                for direction in itinerary:
+                    print("   -", direction)
+                print(
+                    "   Total time:",
+                    itinerary[-1].datetime_arrive - 
+                    itinerary[0].datetime_depart
+                )
+        else:
+            # The user only wants one itinerary.
             try:
                 itinerary = itinerary_finder.find_itinerary(
                     agencies,
@@ -133,8 +179,8 @@ def main():
                     itinerary[-1].datetime_arrive - 
                     itinerary[0].datetime_depart
                 )
-        else:
-            print("The origin and the destination are the same.")
+    else:
+        print("The origin and the destination are the same.")
 
 if __name__ == "__main__":
     main()
