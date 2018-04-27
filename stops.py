@@ -18,3 +18,4 @@ with open(STOP_LOCATIONS_CSV, "r", newline="", encoding="UTF-8") as f:
         p = Point(lat=row["Latitude"], lng=row["Longitude"])
         name_to_point[row["From PDFs"]] = p
         geo_str_to_name[str(p)] = row["From PDFs"]
+names_sorted = sorted(name_to_point.keys())
