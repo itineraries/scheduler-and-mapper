@@ -68,7 +68,7 @@ class AgencyWalkingDynamic(AgencyWalking):
                                             ##the distance is being sent in text form as that is to be read by humans while the duration is sent
                                             ##by value as it is only considered by the computer
                                             ##I think I will change this though to just send cell['distance'] and cell['duration']
-                                            cls.edges[key] = (cell['distance']['text'], cell['duration']['value'], orig['origin_addresses'][0])
+                                            cls.edges[key] = (cell['distance']['text'], cell['duration']['value'], to_node)
                                     else:
                                             print("Error with edge")
 
