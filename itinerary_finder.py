@@ -77,11 +77,11 @@ def weighted_edges(
                 pass
             else:
                 edge = WeightedEdge(
-                    agency=agency,
                     datetime_depart=weight.datetime_depart,
                     datetime_arrive=weight.datetime_arrive,
                     human_readable_instruction=weight.human_readable_instruction,
                     intermediate_nodes=weight.intermediate_nodes,
+                    agency=agency,
                     from_node=node if depart else known_node,
                     to_node=known_node if depart else node
                 )
@@ -206,12 +206,12 @@ def find_itinerary(
                 # currently assigned value and assign the smaller one.
                 if neighbor_distance_new < neighbor_distance_old:
                     direction = WeightedEdge(
-                        agency=edge.agency,
                         datetime_arrive=edge.datetime_arrive,
                         datetime_depart=edge.datetime_depart,
                         human_readable_instruction=
                             edge.human_readable_instruction,
                         intermediate_nodes=edge.intermediate_nodes,
+                        agency=edge.agency,
                         from_node=
                             current_node if depart else edge.to_node,
                         to_node=edge.from_node if depart else current_node
