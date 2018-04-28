@@ -81,6 +81,7 @@ def weighted_edges(
                     datetime_depart=weight.datetime_depart,
                     datetime_arrive=weight.datetime_arrive,
                     human_readable_instruction=weight.human_readable_instruction,
+                    intermediate_nodes=weight.intermediate_nodes,
                     from_node=node if depart else known_node,
                     to_node=known_node if depart else node
                 )
@@ -210,6 +211,7 @@ def find_itinerary(
                         datetime_depart=edge.datetime_depart,
                         human_readable_instruction=
                             edge.human_readable_instruction,
+                        intermediate_nodes=edge.intermediate_nodes,
                         from_node=
                             current_node if depart else edge.to_node,
                         to_node=edge.from_node if depart else current_node

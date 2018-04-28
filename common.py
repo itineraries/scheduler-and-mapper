@@ -68,6 +68,10 @@ class LineSegment:
             "{},{}".format(self.point_A.lat, self.point_A.lng),
             "{},{}".format(self.point_B.lat, self.point_B.lng)
         )
+@attr.s(frozen=True)
+class NodeAndTime:
+    node = attr.ib(converter=str)
+    time = attr.ib(validator=attr.validators.instance_of(datetime.datetime))
 @attr.s
 class Weight:
     # The datetime when the user leaves a node
@@ -89,6 +93,9 @@ class Weight:
         default=None,
         converter=attr.converters.optional(str)
     )
+    # A tuple of NodeAndTime objects that represent stops that the vehicle
+    # makes before the user disembarks
+    intermediate_nodes = attr.ib(default=(), converter=tuple)
 @attr.s(frozen=True)
 class WeightedEdge(Weight):
     '''
