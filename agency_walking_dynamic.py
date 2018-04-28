@@ -132,7 +132,6 @@ class AgencyWalkingDynamic(AgencyWalking):
                         try:
                                 distance, seconds, address = cls.edges[key]
                         except KeyError:
-                                    print("Key Error")
                                     return
                         if seconds < cls.max_seconds: # the distance between the two nodes isn't impossible
                             travel_duration = datetime.timedelta(seconds=seconds)

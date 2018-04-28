@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import collections, datetime, heapq, itertools, pickle
 from agency_common import Agency
-from common import Weight, WeightedEdge
+from common import NodeAndTime, Weight, WeightedEdge
 from common_nyu import NYU_PICKLE
 JUST_BEFORE_MIDNIGHT = datetime.timedelta(microseconds=-1)
 MIDNIGHT = datetime.time()
@@ -113,6 +113,12 @@ class AgencyNYU(Agency):
                 ) < ONE_DAY
             ) and not date_overflowed:
                 days_without_edges += 1
+                day_start = datetime.datetime.combine(
+                    date_arrive
+                    if backwards else
+                    date_depart,
+                    MIDNIGHT
+                )
                 for schedule in schedule_by_day[
                     (date_arrive if backwards else date_depart).weekday()
                 ]:
@@ -123,7 +129,7 @@ class AgencyNYU(Agency):
                         # Recall that from_node_index < to_node_index is
                         # guaranteed by schedule.get_columns_indices.
                         times = [
-                            (row[from_node_index], row[to_node_index])
+                            row[from_node_index:to_node_index+1]
                             for row in schedule.other_rows
                             if to_node_index < len(row)
                             and row[from_node_index] is not None
@@ -141,7 +147,7 @@ class AgencyNYU(Agency):
                                 ending_index = first_greater_than(
                                     times,
                                     timedelta_arrive,
-                                    lambda x: x[1].time
+                                    lambda x: x[-1].time
                                 )
                             else:
                                 # Find the first row in the schedule where the
@@ -172,43 +178,55 @@ class AgencyNYU(Agency):
                                     None
                                 )
                             ):
+                                # Add the timedeltas to the start of the day to
+                                # to get the departure and arrival times as
+                                # datetime.datetime objects.
+                                trip_d = day_start + row[0].time
+                                trip_a = day_start + row[-1].time
                                 # Add the edge.
-                                d = datetime.datetime.combine(
-                                    date_arrive
-                                    if backwards else
-                                    date_depart,
-                                    MIDNIGHT
-                                ) + row[0].time
-                                a = datetime.datetime.combine(
-                                    date_arrive
-                                    if backwards else
-                                    date_depart,
-                                    MIDNIGHT
-                                ) + row[1].time
                                 heapq.heappush(
                                     edges_heap,
                                     EdgeHeapQKey(
-                                        datetime.datetime.max - d
+                                        datetime.datetime.max - trip_d
                                         if backwards else
-                                        a - datetime.datetime.min,
+                                        trip_a - datetime.datetime.min,
                                         Weight(
-                                            d,
-                                            a,
-                                            "Take Route " +
-                                            schedule.route + "." +
-                                            (
-                                                " Signal driver to stop."
-                                                if row[1].soft
-                                                else ""
+                                            datetime_depart=trip_d,
+                                            datetime_arrive=trip_a,
+                                            human_readable_instruction=(
+                                                "Take Route " +
+                                                schedule.route + "." +
+                                                (
+                                                    " Signal driver to stop."
+                                                    if row[-1].soft
+                                                    else ""
+                                                )
+                                            ),
+                                            intermediate_nodes=tuple(
+                                                NodeAndTime(
+                                                    header,
+                                                    day_start + trip_w.time
+                                                )
+                                                for header, trip_w in zip(
+                                                    itertools.islice(
+                                                        schedule.header_row,
+                                                        from_node_index + 1,
+                                                        None
+                                                    ),
+                                                    itertools.islice(
+                                                        row, 1, len(row) - 1
+                                                    )
+                                                )
+                                                if trip_w
                                             )
                                         )
                                     )
                                 )
                                 if backwards:
-                                    if a < first_arrival:
-                                        first_arrival = a
-                                elif d > last_departure:
-                                    last_departure = d
+                                    if trip_a < first_arrival:
+                                        first_arrival = trip_a
+                                elif trip_d > last_departure:
+                                    last_departure = trip_d
                                 days_without_edges = 0
                 if backwards:
                     # Decrement the day and continue.
@@ -272,6 +290,7 @@ class AgencyNYU(Agency):
                 (last_departure - edges_heap[0].edge.datetime_depart) < ONE_DAY
             ) and not date_overflowed:
                 days_without_edges += 1
+                day_start = datetime.datetime.combine(date_depart, MIDNIGHT)
                 for schedule in schedule_by_day[date_depart.weekday()]:
                     for from_node_index \
                         in schedule.get_column_indices(from_node):
@@ -282,7 +301,7 @@ class AgencyNYU(Agency):
                         # len(row) - 1 will be used later to get the name of
                         # the final stop in the trip.
                         times = [
-                            (row[from_node_index], row[-1], len(row) - 1)
+                            row[from_node_index:]
                             for row in schedule.other_rows
                             if from_node_index < len(row) - 1
                             and row[from_node_index] is not None
@@ -306,38 +325,54 @@ class AgencyNYU(Agency):
                                 starting_index,
                                 None
                             ):
+                                # Add the timedeltas to the start of the day to
+                                # to get the departure and arrival times as
+                                # datetime.datetime objects.
+                                trip_d = day_start + row[0].time
+                                trip_a = day_start + row[-1].time
                                 # Add the edge.
-                                d = datetime.datetime.combine(
-                                    date_depart,
-                                    MIDNIGHT
-                                ) + row[0].time
-                                a = datetime.datetime.combine(
-                                    date_depart,
-                                    MIDNIGHT
-                                ) + row[1].time
                                 heapq.heappush(
                                     edges_heap,
                                     EdgeHeapQKey(
-                                        a - datetime.datetime.min,
+                                        trip_a - datetime.datetime.min,
                                         WeightedEdge(
-                                            datetime_depart=d,
-                                            datetime_arrive=a,
+                                            datetime_depart=trip_d,
+                                            datetime_arrive=trip_a,
                                             human_readable_instruction=(
                                                 "Take Route " +
                                                 schedule.route + "." +
                                                 (
                                                     " Signal driver to stop."
-                                                    if row[1].soft
+                                                    if row[-1].soft
                                                     else ""
                                                 )
                                             ),
+                                            intermediate_nodes=tuple(
+                                                NodeAndTime(
+                                                    header,
+                                                    day_start + trip_w.time
+                                                )
+                                                for header, trip_w in zip(
+                                                    itertools.islice(
+                                                        schedule.header_row,
+                                                        from_node_index + 1,
+                                                        None
+                                                    ),
+                                                    itertools.islice(
+                                                        row, 1, len(row) - 1
+                                                    )
+                                                )
+                                                if trip_w
+                                            ),
                                             from_node=from_node,
-                                            to_node=schedule.header_row[row[2]]
+                                            to_node=schedule.header_row[
+                                                from_node_index + len(row) - 1
+                                            ]
                                         )
                                     )
                                 )
-                                if d > last_departure:
-                                    last_departure = d
+                                if trip_d > last_departure:
+                                    last_departure = trip_d
                                 days_without_edges = 0
                 # Increment the day and continue.
                 try:
