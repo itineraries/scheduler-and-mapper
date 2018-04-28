@@ -2,6 +2,7 @@
 import argparse, datetime, dateutil.parser, warnings
 import agency_common, agency_nyu, agency_walking_static, \
     agency_walking_dynamic, departure_lister, itinerary_finder
+TIME_FORMAT = "%I:%M %p on %A"
 
 def parse_args(agencies=()):
     arg_parser = argparse.ArgumentParser(
@@ -108,6 +109,34 @@ def parse_args(agencies=()):
         agency.handle_parsed_arguments(args_parsed, arg_parser.error)
     # Return the parsed arguments.
     return args_parsed
+def print_weighted_edge(edge, bullet):
+    margin = " " * len(bullet)
+    print(bullet, edge.get_human_readable_instruction())
+    print(
+        margin,
+        "- {}: Depart from {}.".format(
+            edge.datetime_depart.strftime(TIME_FORMAT),
+            edge.from_node
+        )
+    )
+    if edge.intermediate_nodes:
+        print(margin, "- Intermediate stops:")
+        for j, node_and_time in enumerate(edge.intermediate_nodes, start=1):
+            print(
+                margin,
+                "  {:>3}. {}: {}".format(
+                    j,
+                    node_and_time.time.strftime(TIME_FORMAT),
+                    node_and_time.node
+                )
+            )
+    print(
+        margin,
+        "- {}: Arrive at {}.".format(
+            edge.datetime_arrive.strftime(TIME_FORMAT),
+            edge.to_node
+        )
+    )
 def main():
     agencies = (
         agency_nyu.AgencyNYU,
@@ -128,7 +157,7 @@ def main():
             args_parsed.datetime,
             args_parsed.list_departures
         ):
-            print(" -", direction)
+            print_weighted_edge(direction, " -")
     elif args_parsed.origin != args_parsed.destination:
         # The user specified a destination.
         if args_parsed.number_of_itineraries:
@@ -147,8 +176,8 @@ def main():
                 start=1
             ):
                 print(" - Itinerary #{}:".format(i))
-                for direction in itinerary:
-                    print("   -", direction)
+                for i, direction in enumerate(itinerary, start=1):
+                    print_weighted_edge(direction, "   {:>3}.".format(i))
                 print(
                     "   Total time:",
                     itinerary[-1].datetime_arrive - 
@@ -172,8 +201,8 @@ def main():
                 )
             else:
                 print("Itinerary:")
-                for direction in itinerary:
-                    print(" -", direction)
+                for i, direction in enumerate(itinerary, start=1):
+                    print_weighted_edge(direction, "{:>3}.".format(i))
                 print(
                     "Total time:",
                     itinerary[-1].datetime_arrive - 

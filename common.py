@@ -122,10 +122,16 @@ class WeightedEdge(Weight):
             result.append("Depart from")
             result.append(self.from_node)
             result.append(self.datetime_depart.strftime(self.TIME_STRING))
-        if self.human_readable_instruction is not None:
-            result.append(self.human_readable_instruction)
+        hri = self.get_human_readable_instruction()
+        if hri is not None:
+            result.append(hri)
         if self.datetime_arrive is not None:
             result.append("Arrive at")
             result.append(self.to_node)
             result.append(self.datetime_arrive.strftime(self.TIME_STRING))
         return " ".join(result)
+    def get_human_readable_instruction(self):
+        # This function is here because future versions of this software may
+        # generate the human-readable instruction when asked instead of
+        # whenever an edge (that might never get displayed) is generated.
+        return self.human_readable_instruction
