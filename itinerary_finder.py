@@ -303,6 +303,7 @@ def find_itineraries(
             if max_count < 0:
                 return
             yield itinerary
+        return
     # Find an itinerary normally.
     if disallowed_edges is None:
         disallowed_edges = frozenset()
