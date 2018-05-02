@@ -7,7 +7,9 @@ import time
 try:
     _apikey = os.environ["GMAPS_DISTANCE_MATRIX_KEY"]
 except KeyError:
-    _apikey = keyring.get_password("google_maps", "distance_matrix")
+    _apikey = \
+        keyring.get_password("google_maps", "distance_matrix") or \
+        keyring.get_password("google_maps", "default")
 
 ONE_MINUTE = datetime.timedelta(minutes=1)
 
