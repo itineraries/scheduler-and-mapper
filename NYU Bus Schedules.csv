@@ -1,14 +1,2 @@
 Filename,Page,"Area (Top, Left, Bottom, Right)",Column Boundaries
-Route A Mon-Thurs.pdf,1,"108,0,720,306",auto
-Route A Mon-Thurs.pdf,1,"108,306,720,612",auto
-Route A Fri.pdf,1,"108,0,720,306",auto
-Route A Fri.pdf,1,"108,306,720,612",auto
-Route B Mon-Thurs.pdf,1,"84,0,720,612",auto
-Route B Fri.pdf,1,"84,0,720,612",auto
-Route C Mon-Thurs.pdf,1,"89,0,560,792",auto
-Route E Mon-Thurs.pdf,1,"78,0,720,612","134,173,209,250,290,330,359,390,427,472"
-Route E Fri.pdf,1,"80,0,720,612","84,130,172,220,268,315,350,391,429,471,522"
-Route F Mon-Thurs.pdf,1,"76,0,720,612",stream
-Route G Mon-Thurs.pdf,1,"115,0,710,612",auto
-Route G Fri.pdf,1,"115,0,710,612",auto
-Route W Sat-Sun.pdf,1,"74,0,568,792",auto
+Route E Mon-Fri.pdf,1,"93,50,792,1224",auto

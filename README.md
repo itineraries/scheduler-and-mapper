@@ -15,19 +15,11 @@ This code is responsible for parsing schedule data and finding itineraries.
    [tabula-java](https://github.com/tabulapdf/tabula-java/releases).
 
 ## Build schedules
-1. Download the following files from NYU and save them in `./NYU/`:
+These instructions are current for Summer 2018.
+
+1. Download the following file from NYU and save it in `./NYU/`:
    ```
-   http://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20A%20Mon-Thurs.pdf
-   http://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20A%20Fri.pdf
-   http://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20B%20Mon-Thurs.pdf
-   http://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20B%20Fri.pdf
-   http://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20C%20Mon-Thurs.pdf
-   http://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20E%20Mon-Thurs.pdf
-   http://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20E%20Fri.pdf
-   http://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20F%20Mon-Thurs.pdf
-   http://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20G%20Mon-Thurs.pdf
-   http://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20G%20Fri.pdf
-   http://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20W%20Sat-Sun.pdf
+   https://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20E%20Summer%20Schedule.pdf (rename to "Route E Mon-Fri.pdf")
    ```
 2. Run `pickle_nyu.py`.
 3. Download the
