@@ -66,6 +66,16 @@ ONE_DAY = datetime.timedelta(days=1)
 BLANK_ROW = itertools.repeat("")
 header_replacements = {}
 
+def any_multi(iterable, at_least=1):
+    '''
+    Returns True if the iterable has at least at_least elements that are true.
+    '''
+    for element in iterable:
+        if element:
+            at_least -= 1
+            if at_least <= 0:
+                return True
+    return False
 def clean_header(header):
     # Split by any whitespace. Remove empty elements.
     parts = collections.deque(
@@ -242,26 +252,29 @@ def read_pdf_table(filename, pages, area, column_boundaries):
                 row = next(reader)
             except StopIteration:
                 break
-            # Parse this row for times.
-            if parse_schedule_row(BLANK_ROW, row, show_parse_error=False):
-                # Times were found.
-                # This row will be processed again in the next while loop.
-                break
-            # If no times were found, this row is a part of the headers.
-            header_row = [
-                a + "\n" + b for a, b in itertools.zip_longest(
-                    header_row,
-                    row,
-                    fillvalue=""
-                )
-            ]
+            # Skip rows that have only one non-empty cell.
+            if any_multi(row, 2):
+                # Parse this row for times.
+                if parse_schedule_row(BLANK_ROW, row, show_parse_error=False):
+                    # Times were found.
+                    # This row will be processed again in the next while loop.
+                    break
+                # If no times were found, this row is a part of the headers.
+                header_row = [
+                    a + "\n" + b for a, b in itertools.zip_longest(
+                        header_row,
+                        row,
+                        fillvalue=""
+                    )
+                ]
         # Clean up the headers.
         header_row = clean_header_row(header_row)
         # Parse the times.
         other_rows = []
         while True:
             # Process the last seen row.
-            if row:
+            # Skip rows that have only one non-empty cell.
+            if any_multi(row, 2):
                 result_row = parse_schedule_row(header_row, row)
                 if result_row:
                     other_rows.append(result_row)
