@@ -2,7 +2,7 @@
 This code is responsible for parsing schedule data and finding itineraries.
 
 ## Install dependencies
-1. Install the following Python libraries: `attrs python-dateutil keyring requests`
+1. Install Python dependencies by running `pip install -r requirements.txt`.
 2. Get a [Bing Maps API key](https://msdn.microsoft.com/library/ff428642.aspx)
    and store it with this command: `keyring set bing_maps default`
 3. Get a [Google Maps Distance Matrix API key](https://developers.google.com/maps/documentation/distance-matrix/)
