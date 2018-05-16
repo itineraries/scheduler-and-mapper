@@ -21,6 +21,7 @@ IGNORED_TIMES = {
 }
 ABBREVIATION_EXPANSION = {
     "&": "At",
+    "at": "At",
     "N": "North",
     "E": "East",
     "S": "South",
