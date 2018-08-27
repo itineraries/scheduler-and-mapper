@@ -221,7 +221,9 @@ def read_pdf_table(filename, pages, area, column_boundaries):
     try:
         # Launch Tabula and parse out the table in the PDF document.
         argv = [
-            "java", "-jar", "tabula-1.0.1-jar-with-dependencies.jar",
+            "java",
+            "-Dsun.java2d.cmm=sun.java2d.cmm.kcms.KcmsServiceProvider",
+            "-jar", "tabula-1.0.2-jar-with-dependencies.jar",
             "--pages", pages, "--area", area
         ]
         if column_boundaries != "auto":
@@ -238,7 +240,7 @@ def read_pdf_table(filename, pages, area, column_boundaries):
         print("It looks like you do not have Java installed.")
     except subprocess.CalledProcessError as e:
         print("If the JAR file for Tabula is missing, download it here:")
-        print("https://github.com/tabulapdf/tabula-java/releases/tag/v1.0.1")
+        print("https://github.com/tabulapdf/tabula-java/releases/tag/v1.0.2")
         print("Otherwise, make sure that", repr(filename), "exists.")
     else:
         # Tabula should return the data in CSV format. Let's read it.
