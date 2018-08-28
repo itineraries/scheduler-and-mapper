@@ -1,2 +1,6 @@
 Filename,Page,"Area (Top, Left, Bottom, Right)",Column Boundaries
-Route E Mon-Fri.pdf,1,"93,50,792,1224",auto
+Route A Mon-Sun.pdf,1,"96,0,732,306",auto
+Route A Mon-Sun.pdf,1,"96,306,732,612",auto
+Route B Mon-Sun.pdf,1,"82,0,732,612",auto
+Route E Mon-Sun.pdf,1,"80,0,732,612","83,129,172,218,266,314,348,390,427,471,522"
+Route G Mon-Sun.pdf,1,"116,0,732,612",auto

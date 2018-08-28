@@ -15,11 +15,12 @@ This code is responsible for parsing schedule data and finding itineraries.
    [tabula-java](https://github.com/tabulapdf/tabula-java/releases).
 
 ## Build schedules
-These instructions are current for Summer 2018.
-
-1. Download the following file from NYU and save it in `./NYU/`:
+1. Download the following files from NYU and save them in `./NYU/`:
    ```
-   https://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20E%20Summer%20Schedule.pdf (rename to "Route E Mon-Fri.pdf")
+   https://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20A%20Welcome%20Week.pdf (rename to "Route A Mon-Sun.pdf")
+   https://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20B%20Welcome%20Week.pdf (rename to "Route B Mon-Sun.pdf")
+   https://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20E%20Welcome%20Week.pdf (rename to "Route E Mon-Sun.pdf")
+   https://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20G%20Welcome%20Week.pdf (rename to "Route G Mon-Sun.pdf")
    ```
 2. Run `pickle_nyu.py`.
 3. Download the
