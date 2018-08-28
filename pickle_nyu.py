@@ -409,6 +409,11 @@ def main():
             # Save any new nodes for the walking agency.
             node_list.update(header_row)
         pickle.dump(schedule_by_day, out_nyu)
+        # Remove the unnamed node if it is present.
+        try:
+            node_list.remove("")
+        except KeyError:
+            pass
         # Finish it up for the humans.
         out_human.write('\t</body>\n</html>\n')
         # Output the list for the walking agency.
