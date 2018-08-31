@@ -365,7 +365,12 @@ def main():
                 route, dow_start, _, dow_end, _ = match.groups()
                 try:
                     if dow_end is None:
-                        days_of_week = (DAYS_OF_WEEK_REVERSE[dow_start],)
+                        if dow_start == "Weekend" or dow_start == "Weekends":
+                            days_of_week = (5, 6)
+                        elif dow_start == "Weekday" or dow_start == "Weekdays":
+                            days_of_week = range(0, 5)
+                        else:
+                            days_of_week = (DAYS_OF_WEEK_REVERSE[dow_start],)
                     else:
                         days_of_week = range(
                             DAYS_OF_WEEK_REVERSE[dow_start],
