@@ -5,7 +5,7 @@
 # - Blank cells in PDFs are still blank in the output
 # - No words like "Arrival," "Arrive," "Depart," or "Departure" in titles
 # - Randomly select some schedules, compare output to original PDF
-import cgi, collections, csv, datetime, dateutil.parser, io, itertools, \
+import cgi, collections, copy, csv, datetime, dateutil.parser, io, itertools, \
     multiprocessing.pool, os, pickle, re, subprocess, sys
 from common import NODE_LIST_TXT, file_in_this_dir
 from common_nyu import DAYS_OF_WEEK, NYU_PICKLE, NYUSchedule, NYUTime
@@ -77,6 +77,32 @@ def any_multi(iterable, at_least=1):
             if at_least <= 0:
                 return True
     return False
+def one_equal_others_one_true(*iterables):
+    '''
+    Returns True if:
+    - the values at exactly one position in all the given iterables are equal.
+    - at all other positions, at most one value is truthy.
+    '''
+    equal = False
+    for items in itertools.zip_longest(*iterables, fillvalue=False):
+        if items[1:] == items[:-1]:
+            # The values at this position in all the given iterables are equal.
+            if equal:
+                # Oops, this already happened at an earlier position. This
+                # means that the values at more than one position are equal.
+                return False
+            equal = True
+        else:
+            truthy = False
+            for item in items:
+                if item:
+                    # This value is truthy.
+                    if truthy:
+                        # Oops, the value at this position in one of the other
+                        # iterables is already truthy.
+                        return False
+                    truthy = True
+    return equal
 def clean_header(header):
     # Split by any whitespace. Remove empty elements.
     parts = collections.deque(
@@ -140,6 +166,7 @@ def parse_schedule_row(header_row, row, show_parse_error=True):
     last_header = None
     last_delta = None
     result_row = []
+    via_other_route = None
     for h, v in zip(header_row, row):
         v = WHITESPACE.sub(" ", v.strip())
         result_cell = None
@@ -185,6 +212,10 @@ def parse_schedule_row(header_row, row, show_parse_error=True):
                         break
                 else:
                     print("A route deviation cannot be the first stop.")
+            elif v.startswith("Via Route "):
+                # This row is on this schedule but actually for a different
+                # route. NYU is confusing sometimes.
+                via_other_route = v[10:]
             else:
                 try:
                     # We have checked for all know strings that represent times
@@ -216,8 +247,11 @@ def parse_schedule_row(header_row, row, show_parse_error=True):
     # Strip None values from the end of the list.
     while result_row and result_row[-1] is None:
         result_row.pop()
-    return result_row
+    return result_row, via_other_route
 def read_pdf_table(filename, pages, area, column_boundaries):
+    header_row = []
+    other_rows = []
+    other_routes = collections.defaultdict(list)
     try:
         # Launch Tabula and parse out the table in the PDF document.
         argv = [
@@ -247,7 +281,6 @@ def read_pdf_table(filename, pages, area, column_boundaries):
         reader = iter(csv.reader(io.StringIO(output.decode("UTF-8"))))
         # Sometimes, the headers are split among several rows.
         # Recombine them into one row.
-        header_row = ()
         row = ()
         while True:
             # Read the next row.
@@ -258,7 +291,7 @@ def read_pdf_table(filename, pages, area, column_boundaries):
             # Skip rows that have only one non-empty cell.
             if any_multi(row, 2):
                 # Parse this row for times.
-                if parse_schedule_row(BLANK_ROW, row, show_parse_error=False):
+                if parse_schedule_row(BLANK_ROW, row, show_parse_error=False)[0]:
                     # Times were found.
                     # This row will be processed again in the next while loop.
                     break
@@ -273,22 +306,37 @@ def read_pdf_table(filename, pages, area, column_boundaries):
         # Clean up the headers.
         header_row = clean_header_row(header_row)
         # Parse the times.
-        other_rows = []
         while True:
             # Process the last seen row.
             # Skip rows that have only one non-empty cell.
             if any_multi(row, 2):
-                result_row = parse_schedule_row(header_row, row)
+                result_row, via_other_route = \
+                    parse_schedule_row(header_row, row)
                 if result_row:
-                    other_rows.append(result_row)
+                    if via_other_route:
+                        other_routes[via_other_route].append(result_row)
+                    else:
+                        other_rows.append(result_row)
             # Get the next row.
             try:
                 row = next(reader)
             except StopIteration:
                 break
-        # Return the result.
-        return header_row, other_rows
-    return [], []
+        # Remove columns with blank headings.
+        to_pop = [i for i, header in enumerate(header_row) if not header]
+        for i in reversed(to_pop):
+            header_row.pop(i)
+            for row in itertools.chain(
+                # Loop through every row.
+                other_rows,
+                # Loop through rows that are for other routes, too.
+                itertools.chain.from_iterable(
+                    other_routes.values()
+                )
+            ):
+                if i < len(row):
+                    row.pop(i)
+    return header_row, other_rows, other_routes
 def main():
     # Read the table of schedules.
     schedules = []
@@ -327,25 +375,15 @@ def main():
                     return
     except OSError as e:
         print("Cannot open table of header string replacements", e)
+    # Save a list of nodes for finding walking times later.
+    node_list = set()
+    # Keep track of rows that need to be added to other routes.
+    other_routes_all = []
+    # Organize schedules by the day of the week.
+    schedule_by_day = [[] for i in range(7)]
     # Parse the schedules.
-    with multiprocessing.pool.ThreadPool() as pool, \
-        open(NYU_PICKLE, "wb") as out_nyu, \
-        open(NYU_HTML, "w", encoding="UTF-8") as out_human, \
-        open(NODE_LIST_TXT, "w", encoding="UTF-8") as out_walking:
-        # Organize schedules by the day of the week.
-        schedule_by_day = [[] for i in range(7)]
-        # Create an HTML file that humans can use to double-check our work.
-        out_human.write(
-            '<!DOCTYPE HTML>\n<html>\n\t<head>\n\t\t<meta charset="UTF-8">\n'
-            '\t\t<title>NYU Bus Schedules</title>\n\t<style type="text/css">\n'
-            'h1{font-family:Segoe UI Semilight,sans-serif}'
-            'p,table{font-family:Segoe UI,sans-serif}'
-            'table{border-collapse:collapse}'
-            'th,td{border:1px solid;padding:2pt 4pt;white-space:nowrap}'
-            '\t\t</style>\n\t</head>\n\t<body>\n'
-        )
-        # Save a list of nodes for finding walking times later.
-        node_list = set()
+    schedules_parsed = []
+    with multiprocessing.pool.ThreadPool() as pool:
         # Process every schedule.
         print(
             "It is assumed that all schedules are sorted from earliest to "
@@ -353,9 +391,12 @@ def main():
         )
         def callback(schedule):
             print("Processing:", schedule["filename"])
-            header_row, other_rows = read_pdf_table(**schedule)
-            return schedule["filename"], header_row, other_rows
-        for filename, header_row, other_rows in pool.imap(callback, schedules):
+            header_row, other_rows, other_routes = read_pdf_table(**schedule)
+            return schedule["filename"], header_row, other_rows, other_routes
+        for filename, header_row, other_rows, other_routes in pool.imap(
+            callback,
+            schedules
+        ):
             print("Completed: ", filename)
             # Get the route letter and days of the week from the filename.
             match = FILENAME.fullmatch(filename)
@@ -379,51 +420,209 @@ def main():
                 except KeyError as e:
                     print("Unknown day of week:", repr(e.args[0]))
                 else:
-                    for dow in days_of_week:
-                        schedule_by_day[dow].append(
-                            NYUSchedule(route, header_row, other_rows)
+                    if days_of_week:
+                        # Create the schedule object.
+                        schedule = NYUSchedule(
+                            route,
+                            header_row,
+                            other_rows,
+                            days_of_week
                         )
-                    # Save our work for humans to check.
-                    out_human.write('\t\t<h1>')
-                    out_human.write(cgi.escape(filename))
-                    out_human.write('</h1>\n\t\t<p>Schedule for Route ')
-                    out_human.write(route)
-                    out_human.write(" (")
-                    out_human.write(
-                        ", ".join(
-                            DAYS_OF_WEEK[dow] for dow in days_of_week
-                        )
-                    )
-                    out_human.write(')</p>\n\t\t<table>\n\t\t\t<tr>\n')
-                    for h in header_row:
-                        out_human.write('\t\t\t\t<th>')
-                        out_human.write(cgi.escape(str(h)))
-                        out_human.write('</th>\n')
-                    out_human.write('\t\t\t</tr>\n')
-                    for row in other_rows:
-                        out_human.write('\t\t\t<tr>\n')
-                        for c in row:
-                            out_human.write('\t\t\t\t<td>')
-                            if c is not None:
-                                out_human.write(cgi.escape(str(c)))
-                            out_human.write('</td>\n')
-                        for _ in range(len(header_row) - len(row)):
-                            out_human.write('\t\t\t\t<td></td>\n')
-                        out_human.write('\t\t\t</tr>\n')
-                    out_human.write('\t\t</table>\n')
+                        schedules_parsed.append((filename, schedule))
+                        # Assign it to the specified days of the week.
+                        for dow in days_of_week:
+                            schedule_by_day[dow].append(schedule)
+                        # Store the rows that need to be added to other routes.
+                        for route, rows in other_routes.items():
+                            other_routes_all.append(
+                                NYUSchedule(
+                                    route,
+                                    header_row,
+                                    rows,
+                                    days_of_week
+                                )
+                            )
             # Save any new nodes for the walking agency.
             node_list.update(header_row)
-        pickle.dump(schedule_by_day, out_nyu)
-        # Remove the unnamed node if it is present.
-        try:
-            node_list.remove("")
-        except KeyError:
-            pass
+    # Add to other routes the rows that need to be added to other routes.
+    migrations = []
+    for schedule_source_index, schedule_source in enumerate(other_routes_all):
+        # Find rows in the source schedule that can fit into a destination
+        # schedule.
+        for row_source_index, row_source in \
+            enumerate(schedule_source.other_rows):
+            found = False
+            # Find the schedule to which the rows need to be added.
+            for schedule_destination_index, schedule_destination in \
+                enumerate(schedule_by_day[schedule_source.days_of_week[0]]):
+                if schedule_source.route == schedule_destination.route:
+                    # If the destination header row does not end with the
+                    # source header row, concatenate the source header row onto
+                    # the destination header row. Columns that contain no data,
+                    # not counting the header row, will be deleted later.
+                    if len(schedule_destination.header_row) < \
+                        len(schedule_source.header_row) or \
+                        schedule_destination.header_row \
+                            [-len(schedule_source.header_row):] != \
+                        schedule_source.header_row:
+                        schedule_destination.header_row.extend(
+                            schedule_source.header_row
+                        )
+                    # Find ways that the headings of the two schedules could be
+                    # joined until a way that works is found.
+                    for column_indices in \
+                        schedule_destination.get_columns_indices(
+                            *schedule_source.header_row
+                        ):
+                        # Look for a row in the destination schedule where:
+                        # - the time for one stop matches both schedules.
+                        # - the times for all other stops are in one schedule
+                        #   schedule but not both.
+                        for row_destination_index, row_destination in \
+                            enumerate(schedule_destination.other_rows):
+                            if one_equal_others_one_true(
+                                row_source,
+                                (
+                                    (
+                                        row_destination[index]
+                                        if index < len(row_destination) else
+                                        False
+                                    )
+                                    for index in column_indices
+                                )
+                            ):
+                                # This row satisfies the conditions! We can
+                                # copy the stop times from the source row to
+                                # the destination row. We cannot modify data
+                                # structures while looping through them, so
+                                # just make a note of this operation for later.
+                                migrations.append(
+                                    (
+                                        schedule_source_index,
+                                        row_source_index,
+                                        schedule_destination_index,
+                                        row_destination_index,
+                                        column_indices
+                                    )
+                                )
+                                # Move on to the next source row.
+                                found = True
+                                break
+                        if found:
+                            break
+                    if found:
+                        break
+    for schedule_source_index, row_source_index, \
+        schedule_destination_index, row_destination_index, \
+        column_indices in reversed(migrations):
+        # Retrieve the schedules.
+        schedule_source = other_routes_all[schedule_source_index]
+        schedule_destination = \
+            schedule_by_day \
+                [schedule_source.days_of_week[0]][schedule_destination_index]
+        # If the days of the week for both schedules are not the same, then
+        # make a deep copy of the destination schedule. It will replace the old
+        # destination schedule on days of the week where the schedule will not
+        # be modified.
+        sssdow = set(schedule_source.days_of_week)
+        ssddow = set(schedule_destination.days_of_week)
+        if sssdow != ssddow:
+            schedule_destination_copy = copy.deepcopy(schedule_destination)
+            for dow in sssdow - sssdow:
+                schedule_by_day[dow].remove(schedule_destination)
+                schedule_by_day[dow].append(schedule_destination_copy)
+        # Execute the copying.
+        row_source = schedule_source.other_rows[row_source_index]
+        row_destination = \
+            schedule_destination.other_rows[row_destination_index]
+        for index_source, index_destination in enumerate(column_indices):
+            while len(row_destination) <= index_destination:
+                row_destination.append(None)
+            row_destination[index_destination] = row_source[index_source]
+        # Now that the source row has been copied, delete it.
+        schedule_source.other_rows.pop(row_source_index)
+    for schedule_source in other_routes_all:
+        # If there are rows that were not copied, then accept the
+        # source schedule as an extra schedule. Only include the rows
+        # that were not copied.
+        if schedule_source.other_rows:
+            for dow in schedule_source.days_of_week:
+                schedule_by_day[dow].append(schedule_source)
+            schedules_parsed.append(("<Found>", schedule_source))
+    # Delete columns that contain no data, not counting the header row.
+    for schedule in itertools.chain.from_iterable(schedule_by_day):
+        for index in reversed(
+            range(
+                max(
+                    len(schedule.header_row),
+                    max(len(row) for row in schedule.other_rows)
+                )
+            )
+        ):
+            empty = True
+            for row in schedule.other_rows:
+                if index < len(row) and row[index]:
+                    empty = False
+                    break
+            if empty:
+                schedule.header_row.pop(index)
+                for row in schedule.other_rows:
+                    if index < len(row):
+                        row.pop(index)
+    # Create an HTML file that humans can use to double-check our work.
+    with open(NYU_HTML, "w", encoding="UTF-8") as f:
+        f.write(
+            '<!DOCTYPE HTML>\n<html>\n\t<head>\n\t\t<meta charset="UTF-8">\n'
+            '\t\t<title>NYU Bus Schedules</title>\n\t<style type="text/css">\n'
+            'h1{font-family:Segoe UI Semilight,sans-serif}'
+            'p,table{font-family:Segoe UI,sans-serif}'
+            'table{border-collapse:collapse}'
+            'th,td{border:1px solid;padding:2pt 4pt;white-space:nowrap}'
+            '\t\t</style>\n\t</head>\n\t<body>\n'
+        )
+        for filename, schedule in schedules_parsed:
+            # Save our work for humans to check.
+            f.write('\t\t<h1>')
+            f.write(cgi.escape(filename))
+            f.write('</h1>\n\t\t<p>Schedule for Route ')
+            f.write(schedule.route)
+            f.write(" (")
+            f.write(
+                ", ".join(
+                    DAYS_OF_WEEK[dow] for dow in schedule.days_of_week
+                )
+            )
+            f.write(')</p>\n\t\t<table>\n\t\t\t<tr>\n')
+            for h in schedule.header_row:
+                f.write('\t\t\t\t<th>')
+                f.write(cgi.escape(str(h)))
+                f.write('</th>\n')
+            f.write('\t\t\t</tr>\n')
+            for row in schedule.other_rows:
+                f.write('\t\t\t<tr>\n')
+                for c in row:
+                    f.write('\t\t\t\t<td>')
+                    if c is not None:
+                        f.write(cgi.escape(str(c)))
+                    f.write('</td>\n')
+                for _ in range(len(schedule.header_row) - len(row)):
+                    f.write('\t\t\t\t<td></td>\n')
+                f.write('\t\t\t</tr>\n')
+            f.write('\t\t</table>\n')
         # Finish it up for the humans.
-        out_human.write('\t</body>\n</html>\n')
-        # Output the list for the walking agency.
+        f.write('\t</body>\n</html>\n')
+    # Output the pickled schedule.
+    with open(NYU_PICKLE, "wb") as f:
+        pickle.dump(schedule_by_day, f)
+    # Remove the unnamed node if it is present.
+    try:
+        node_list.remove("")
+    except KeyError:
+        pass
+    # Output the list for the walking agency.
+    with open(NODE_LIST_TXT, "w", encoding="UTF-8") as f:
         for node in sorted(node_list):
-            print(node, file=out_walking)
+            print(node, file=f)
     print("Done.")
 
 if __name__ == "__main__":
