@@ -17,10 +17,19 @@ This code is responsible for parsing schedule data and finding itineraries.
 ## Build schedules
 1. Download the following files from NYU and save them in `./NYU/`:
    ```
-   https://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20A%20Welcome%20Week.pdf (rename to "Route A Mon-Sun.pdf")
-   https://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20B%20Welcome%20Week.pdf (rename to "Route B Mon-Sun.pdf")
-   https://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20E%20Welcome%20Week.pdf (rename to "Route E Mon-Sun.pdf")
-   https://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20G%20Welcome%20Week.pdf (rename to "Route G Mon-Sun.pdf")
+   https://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20A%20Mon-Thurs.pdf
+   https://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20A%20Fri.pdf
+   https://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20A%20Weekend.pdf
+   https://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20B%20Mon-Thurs.pdf
+   https://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20B%20Fri.pdf
+   https://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20C%20Mon-Thurs.pdf
+   https://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20E%20Mon-Thurs.pdf
+   https://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20E%20Fri.pdf
+   https://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20F%20Mon-Thurs.pdf
+   https://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20G%20Mon-Thurs.pdf
+   https://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20G%20Fri.pdf
+   https://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20G%20Weekend.pdf
+   https://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20W%20Sat-Sun.pdf
    ```
 2. Run `pickle_nyu.py`.
 3. Download the
