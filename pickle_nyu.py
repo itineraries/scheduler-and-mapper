@@ -6,7 +6,8 @@
 # - No words like "Arrival," "Arrive," "Depart," or "Departure" in titles
 # - Randomly select some schedules, compare output to original PDF
 import cgi, collections, copy, csv, datetime, dateutil.parser, io, itertools, \
-    multiprocessing.pool, os, pickle, re, subprocess, sys
+    multiprocessing.pool, os, pickle, re, requests, subprocess, sys, \
+    urllib.parse
 from common import NODE_LIST_TXT, file_in_this_dir
 from common_nyu import DAYS_OF_WEEK, NYU_PICKLE, NYUSchedule, NYUTime
 import pickle_nyu_unwritten_times
@@ -26,9 +27,14 @@ ABBREVIATION_EXPANSION = {
     "E": "East",
     "S": "South",
     "W": "West",
+    "NB": "Northbound",
+    "EB": "Eastbound",
+    "SB": "Southbound",
+    "WB": "Westbound",
     "Ave": "Avenue",
     "St": "Street",
     "street": "Street",
+    "Pl": "Place",
     "Metrotech": "MetroTech",
     "First": "1st",
     "Second": "2nd",
@@ -41,6 +47,7 @@ DIRECTIONAL_WORDS = {
     "Westbound",
     "Uptown",
     "Downtown",
+    "Opposite",
 }
 DAYS_OF_WEEK_REVERSE = {
     "Mon": 0,
@@ -62,7 +69,9 @@ DAYS_OF_WEEK_REVERSE = {
     "Satur": 5,
 }
 WHITESPACE = re.compile(r"\s+")
-FILENAME = re.compile(r"Route (\w) ([A-Z][a-z]*)(\-([A-Z][a-z]*))?\.(pdf|PDF)")
+FILENAME = re.compile(
+    r"Route (\w) Schedules? \- ([A-Z][a-z]*)(\-([A-Z][a-z]*))?\.(csv|CSV)"
+)
 ONE_DAY = datetime.timedelta(days=1)
 BLANK_ROW = itertools.repeat("")
 header_replacements = {}
@@ -122,10 +131,12 @@ def clean_header(header):
             parts.popleft()
             if parts and parts[0] == "from":
                 parts.popleft()
+    # Expand abbreviations.
+    parts = [
+        ABBREVIATION_EXPANSION.get(p.strip("()").rstrip("."), p) for p in parts
+    ]
     # Remove directional words.
     parts = [p for p in parts if p.strip("()") not in DIRECTIONAL_WORDS]
-    # Expand abbreviations.
-    parts = [ABBREVIATION_EXPANSION.get(p.rstrip("."), p) for p in parts]
     # Put spaces back in.
     result = " ".join(parts)
     # Do the string replacements.
@@ -168,9 +179,11 @@ def parse_schedule_row(header_row, row, show_parse_error=True):
     result_row = []
     via_other_route = None
     for h, v in zip(header_row, row):
-        v = WHITESPACE.sub(" ", v.strip())
         result_cell = None
-        if v:
+        # Normalize whitespace.
+        v = WHITESPACE.sub(" ", v.strip())
+        # Ignore blank cells and cells that only contain "-".
+        if v and v != "-":
             # Check for strings that represent times but that are not times.
             if v == "Soft Stop":
                 if last_delta is not None:
@@ -240,6 +253,7 @@ def parse_schedule_row(header_row, row, show_parse_error=True):
                                 parsed += ONE_DAY
                         # Convert this into an NYUTime object.
                         result_cell = NYUTime(parsed, True, False)
+        # Save this cell.
         result_row.append(result_cell)
         if result_cell is not None:
             last_header = h
@@ -248,34 +262,19 @@ def parse_schedule_row(header_row, row, show_parse_error=True):
     while result_row and result_row[-1] is None:
         result_row.pop()
     return result_row, via_other_route
-def read_pdf_as_csv_io(filename, pages, area, column_boundaries):
-    try:
-        # Launch Tabula and parse out the table in the PDF document.
-        argv = [
-            "java",
-            "-Dsun.java2d.cmm=sun.java2d.cmm.kcms.KcmsServiceProvider",
-            "-jar", "tabula-1.0.2-jar-with-dependencies.jar",
-            "--pages", pages, "--area", area
-        ]
-        if column_boundaries != "auto":
-            if column_boundaries == "stream":
-                argv.append("--stream")
-            elif column_boundaries == "lattice":
-                argv.append("--lattice")
-            else:
-                argv.append("--columns")
-                argv.append(column_boundaries)
-        argv.append(os.path.join(os.curdir, "NYU", filename))
-        output = subprocess.check_output(argv)
-    except FileNotFoundError:
-        print("It looks like you do not have Java installed.")
-    except subprocess.CalledProcessError as e:
-        print("If the JAR file for Tabula is missing, download it here:")
-        print("https://github.com/tabulapdf/tabula-java/releases/tag/v1.0.2")
-        print("Otherwise, make sure that", repr(filename), "exists.")
-    else:
-        return io.StringIO(output.decode("UTF-8"))
-    return None
+def read_google_sheet(workbook_key, sheet_gid):
+    r = requests.get(
+        "https://spreadsheets.google.com/feeds/download/spreadsheets/Export",
+        params={"key": workbook_key, "gid": sheet_gid, "exportFormat": "csv"}
+    )
+    if r.ok:
+        filename = None
+        for part in r.headers["Content-Disposition"].split(";"):
+            part = part.strip()
+            if part.startswith("filename*=UTF-8''"):
+                filename =  urllib.parse.unquote(part[17:])
+        return io.StringIO(r.text), filename
+    return None, None
 def read_csv_io(csv_io):
     header_row = []
     other_rows = []
@@ -349,10 +348,9 @@ def main():
             for i, row in enumerate(csv.DictReader(f), start=1):
                 try:
                     schedules.append({
-                        "filename": row["Filename"],
-                        "pages": row["Page"],
-                        "area": row["Area (Top, Left, Bottom, Right)"],
-                        "column_boundaries": row["Column Boundaries"]
+                        "workbook_key": row["Key"],
+                        "sheet_gid": row["GID"],
+                        "filename_override": row["Filename Override"]
                     })
                 except KeyError as e:
                     print(
@@ -394,10 +392,13 @@ def main():
             "latest."
         )
         def callback(schedule):
-            print("Processing:", schedule["filename"])
-            header_row, other_rows, other_routes = \
-                read_csv_io(read_pdf_as_csv_io(**schedule))
-            return schedule["filename"], header_row, other_rows, other_routes
+            print("Processing:", schedule)
+            filename_override = schedule.pop("filename_override")
+            csv_io, filename = read_google_sheet(**schedule)
+            header_row, other_rows, other_routes = read_csv_io(csv_io)
+            if filename_override:
+                filename = filename_override
+            return filename, header_row, other_rows, other_routes
         for filename, header_row, other_rows, other_routes in pool.imap(
             callback,
             schedules

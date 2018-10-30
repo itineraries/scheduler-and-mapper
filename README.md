@@ -15,34 +15,18 @@ This code is responsible for parsing schedule data and finding itineraries.
    [tabula-java](https://github.com/tabulapdf/tabula-java/releases).
 
 ## Build schedules
-1. Download the following files from NYU and save them in `./NYU/`:
-   ```
-   https://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20A%20Mon-Thurs.pdf
-   https://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20A%20Fri.pdf
-   https://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20A%20Weekend.pdf
-   https://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20B%20Mon-Thurs.pdf
-   https://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20B%20Fri.pdf
-   https://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20C%20Mon-Thurs.pdf
-   https://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20E%20Mon-Thurs.pdf
-   https://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20E%20Fri.pdf
-   https://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20F%20Mon-Thurs.pdf
-   https://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20G%20Mon-Thurs.pdf
-   https://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20G%20Fri.pdf
-   https://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20G%20Weekend.pdf
-   https://www.nyu.edu/content/dam/nyu/univTransportation/documents/Route%20W%20Sat-Sun.pdf
-   ```
-2. Run `pickle_nyu.py`.
-3. Download the
+1. Run `pickle_nyu.py`.
+2. Download the
    [stops feed](https://market.mashape.com/transloc/openapi-1-2#stops)
    from the TransLoc API. Save it as `NYU_Stops.json`.
-4. Run `match_stops_locations.py`. If it says to check a stop in the overrides
+3. Run `match_stops_locations.py`. If it says to check a stop in the overrides
    file, then update `Stop Location Overrides.csv`.
-5. Run `pickle_walking_static.py`.
+4. Run `pickle_walking_static.py`.
 
 ## Modify schedules (optional)
-NYU publishes its bus schedules as timetables in PDF documents. If you want to
-add or remove schedules or change how they are parsed, see these configuration
-files.
+NYU publishes its bus schedules as timetables in Google Sheets sheets. If you
+want to add or remove schedules or change how they are parsed, see these
+configuration files.
 
 [Click here](https://www.nyu.edu/life/travel-and-transportation/university-transportation/routes-and-schedules.html)
 for more information about the NYU bus schedules and to download timetables.
@@ -52,34 +36,26 @@ If you want to include more schedules, download them to this directory and add
 them to this CSV. If you want to exclude schedules, remove their entries from
 this file. The following sections explain each column.
 
-#### Filename
-Insert the path to the PDF with the timetable. It can be absolute, or it can be
-relative to the `NYU` directory inside this directory.
+#### Key
+Extract the workbook key from the workbook URL. It is usually right after
+`/spreadsheets/d/`. For example, given this URL:
 
-#### Page
-This is the page number of the page inside the PDF that the timetable is on.
-For single-page PDF documents, just insert `1`. Only one page will be scanned.
-If you want more pages to be scanned, add more rows to the CSV file with the
-same filename but different page numbers.
+    https://docs.google.com/spreadsheets/d/1ri820ZdZNSj0nxnaCfzaczsjY0ALORGRMnUXt23QMNE/edit#gid=1304245022
 
-#### Area (Top, Left, Bottom, Right)
-Define a rectangle for in which the timetable will be scanned. The top and
-bottom sides are defined as points from the top of the page. The left and right
-sides are defined as points from the left edge of the page.
+The workbook key is `1ri820ZdZNSj0nxnaCfzaczsjY0ALORGRMnUXt23QMNE`.
 
-#### Column Boundaries
-If you want to change the column detection method for any schedule, modify its
-entry appropriately in this file. These are the available options:
+#### GID
+Extract the worksheet GID from the workbook URL. It is usually right after
+`#gid=`. For example, given the same URL as above, the worksheet GID is
+`1304245022`.
 
- - `auto`: `tabula-java` will automatically decide the column detection method.
- - `stream`: `tabula-java` will look for vertically contiguous regions with no
-   text between columns.
- - `lattice`: `tabula-java` will look for lines that are drawn between columns.
- - A string of comma-separated integers in base-10: the columns will be
-   separated at these predefined distances, in points, from the left edge of
-   the page. Note that because the CSV file format uses commas to delimit
-   columns, you must surround this string with quotation marks if you are
-   editing the CSV file in a text editor.
+#### Filename Override
+When Google Drive exports a worksheet from Google Sheets, the filename is
+`[Name of Workbook] - [Name of Worksheet].csv`. If the name of the workbook
+does not in the format of `Route [Route] Schedule` or `Route [Route]
+Schedules` or the name of the worksheet does not contain the days of the week,
+then you must override the filename to contain the route and the days of the
+week.
 
 ### NYU Bus Stop Replacements.csv
 When the names of the bus stops are taken from the header rows of the
