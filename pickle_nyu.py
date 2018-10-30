@@ -248,10 +248,7 @@ def parse_schedule_row(header_row, row, show_parse_error=True):
     while result_row and result_row[-1] is None:
         result_row.pop()
     return result_row, via_other_route
-def read_pdf_table(filename, pages, area, column_boundaries):
-    header_row = []
-    other_rows = []
-    other_routes = collections.defaultdict(list)
+def read_pdf_as_csv_io(filename, pages, area, column_boundaries):
     try:
         # Launch Tabula and parse out the table in the PDF document.
         argv = [
@@ -277,8 +274,15 @@ def read_pdf_table(filename, pages, area, column_boundaries):
         print("https://github.com/tabulapdf/tabula-java/releases/tag/v1.0.2")
         print("Otherwise, make sure that", repr(filename), "exists.")
     else:
+        return io.StringIO(output.decode("UTF-8"))
+    return None
+def read_csv_io(csv_io):
+    header_row = []
+    other_rows = []
+    other_routes = collections.defaultdict(list)
+    if csv_io:
         # Tabula should return the data in CSV format. Let's read it.
-        reader = iter(csv.reader(io.StringIO(output.decode("UTF-8"))))
+        reader = iter(csv.reader(csv_io))
         # Sometimes, the headers are split among several rows.
         # Recombine them into one row.
         row = ()
@@ -391,7 +395,8 @@ def main():
         )
         def callback(schedule):
             print("Processing:", schedule["filename"])
-            header_row, other_rows, other_routes = read_pdf_table(**schedule)
+            header_row, other_rows, other_routes = \
+                read_csv_io(read_pdf_as_csv_io(**schedule))
             return schedule["filename"], header_row, other_rows, other_routes
         for filename, header_row, other_rows, other_routes in pool.imap(
             callback,
