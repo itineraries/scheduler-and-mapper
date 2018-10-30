@@ -1,17 +1,14 @@
-Filename,Page,"Area (Top, Left, Bottom, Right)",Column Boundaries
-Route A Fri.pdf,1,"108,0,732,306",auto
-Route A Fri.pdf,1,"108,306,732,612",auto
-Route A Mon-Thurs.pdf,1,"108,0,732,306",auto
-Route A Mon-Thurs.pdf,1,"108,306,732,612",auto
-Route A Weekend.pdf,1,"108,0,732,306",auto
-Route A Weekend.pdf,1,"108,306,732,612",auto
-Route B Fri.pdf,1,"82,0,732,612",auto
-Route B Mon-Thurs.pdf,1,"82,0,732,612",auto
-Route C Mon-Thurs.pdf,1,"98,0,555,792",auto
-Route E Fri.pdf,1,"80,0,732,612","83,129,172,218,266,314,348,390,427,475,527"
-Route E Mon-Thurs.pdf,1,"80,0,732,612","136,176,213,252,292,334,364,395,434,472"
-Route F Mon-Thurs.pdf,1,"77,0,732,612",stream
-Route G Fri.pdf,1,"116,0,732,612",auto
-Route G Mon-Thurs.pdf,1,"116,0,732,612",auto
-Route G Weekend.pdf,1,"116,0,732,612",auto
-Route W Sat-Sun.pdf,1,"75,0,570,792",auto
+Key,GID,Filename Override
+1jlRme7S0vBssLcbZlQTjP5QrHtV0Cj02jMydXN_7E2I,1331793628
+1jlRme7S0vBssLcbZlQTjP5QrHtV0Cj02jMydXN_7E2I,59944386
+1jlRme7S0vBssLcbZlQTjP5QrHtV0Cj02jMydXN_7E2I,703898394
+1RFcpF009PyBT-E-FlfidOWe0Zi5n2mVD-dk988QiSoM,1450224670
+1RFcpF009PyBT-E-FlfidOWe0Zi5n2mVD-dk988QiSoM,1376082178
+1sI19tog5q2HvD62v8WK5mbz8gC4mPqxLwsLPDkcGgj4,957095352
+1shK20dC2NbZu87IAejKz6AG3Bylm8DUKZjoqBIUsipQ,1909168798
+1shK20dC2NbZu87IAejKz6AG3Bylm8DUKZjoqBIUsipQ,355259140
+17gwe1E9PG4UuvL8boBFrmZKo-fmi7js-3CBF771CYSk,119295668,Route F Schedule - Mon-Thurs.csv
+1q-QoF3s9OKUxNKcApknQJdRlGHC6GS4JwaMgwB-_xjY,1694075524
+1q-QoF3s9OKUxNKcApknQJdRlGHC6GS4JwaMgwB-_xjY,9258134
+1q-QoF3s9OKUxNKcApknQJdRlGHC6GS4JwaMgwB-_xjY,394276105
+1ri820ZdZNSj0nxnaCfzaczsjY0ALORGRMnUXt23QMNE,1304245022
