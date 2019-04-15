@@ -11,8 +11,6 @@ This code is responsible for parsing schedule data and finding itineraries.
    `keyring set google_maps distance_matrix`
 4. Clone [string-match](https://github.com/itineraries/string-match) to `..`,
    switch to `../string-match`, run `make libmatcher.so`, and switch back here.
-5. Download `tabula-1.0.1-jar-with-dependencies.jar` from
-   [tabula-java](https://github.com/tabulapdf/tabula-java/releases).
 
 ## Build schedules
 1. Run `pickle_nyu.py`.
